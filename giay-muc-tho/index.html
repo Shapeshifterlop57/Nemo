@@ -54,7 +54,34 @@
     <section id="account-area" class="section account-section hidden"><div class="wrap"><div class="section-heading"><div><p class="eyebrow">GÓC RIÊNG</p><h2 id="account-title">Tài khoản của bạn.</h2></div><button id="sign-out" class="button button-outline">Đăng xuất</button></div><p id="account-message" class="muted"></p><div id="admin-panel" class="admin-panel hidden"><div class="admin-heading"><div><p class="eyebrow">CHỈ DÀNH CHO QUẢN TRỊ VIÊN</p><h3>Quản lý thư viện</h3></div><button id="new-poem" class="button button-dark">＋ Viết bài mới</button></div><form id="poem-editor" class="editor-form hidden"><input id="edit-id" type="hidden"><label>Tiêu đề<input id="edit-title" maxlength="160" required placeholder="Tên bài thơ"></label><div class="editor-two"><label>Chủ đề<input id="edit-category" maxlength="60" placeholder="Ví dụ: Nỗi nhớ"></label><label>Trạng thái<select id="edit-published"><option value="false">Bản nháp</option><option value="true">Xuất bản công khai</option></select></label></div><label>Nội dung thơ<textarea id="edit-content" rows="12" maxlength="20000" required placeholder="Viết thơ ở đây... Mỗi dòng sẽ được giữ nguyên."></textarea></label><label>Ghi chú / từ khóa cho trợ lý thơ<textarea id="edit-notes" rows="3" maxlength="4000" placeholder="Tùy chọn: bối cảnh, chủ đề, từ khóa để AI tìm đúng bài hơn."></textarea></label><div class="editor-actions"><button class="button button-dark" type="submit">Lưu bài thơ</button><button id="cancel-edit" class="button button-outline" type="button">Hủy</button><span id="editor-status" class="muted"></span></div></form><div id="admin-poem-list" class="admin-list"></div><div class="knowledge-box"><div><h3>Kho kiến thức của trợ lý thơ</h3><p>Thêm ghi chú để trợ lý tra cứu khi trả lời. Không nhập thông tin riêng tư.</p></div><form id="knowledge-form" class="knowledge-form"><input id="knowledge-title" required maxlength="120" placeholder="Tiêu đề ghi chú"><textarea id="knowledge-content" required maxlength="5000" rows="3" placeholder="Nội dung kiến thức..."></textarea><label class="check-label"><input id="knowledge-published" type="checkbox" checked> Cho phép trợ lý sử dụng ghi chú này</label><button class="button button-outline" type="submit">Thêm ghi chú</button><span id="knowledge-status" class="muted"></span></form><div id="knowledge-list" class="knowledge-list"></div></div></div></div></section>
   </main>
 
-  <footer class="site-footer"><div class="wrap footer-inner"><a class="brand" href="#home"><span class="brand-mark">✳</span><span>trang thơ<span class="brand-dot">.</span></span></a><p>Được viết bằng chữ, giữ lại bằng lòng.</p><a href="#home" class="back-top">LÊN ĐẦU TRANG ↑</a></div></footer>
+
+<footer class="site-footer">
+  <div class="wrap footer-inner">
+    <a class="brand" href="#home" aria-label="Trang Thơ, về đầu trang">
+      <span class="brand-mark">✳</span>
+      <span>trang thơ<span class="brand-dot">.</span></span>
+    </a>
+
+    <div class="footer-author">
+      <span class="footer-label">MỘT GÓC NHỎ CỦA</span>
+      <a
+        class="footer-facebook"
+        href="https://www.facebook.com/tran.inh.phong.455771/"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M13.5 21v-8h2.7l.4-3.1h-3.1V8c0-.9.3-1.5 1.6-1.5h1.7V3.7c-.3 0-1.3-.2-2.5-.2-2.5 0-4.2 1.5-4.2 4.3v2.1H7.3V13h2.8v8z"/>
+        </svg>
+        <span>Facebook tác giả</span>
+        <span aria-hidden="true">↗</span>
+      </a>
+      <p>Được viết bằng chữ, giữ lại bằng lòng.</p>
+    </div>
+
+    <a href="#home" class="back-top">LÊN ĐẦU TRANG ↑</a>
+  </div>
+</footer>
 
   <dialog id="auth-dialog" class="auth-dialog"><button id="auth-close" class="dialog-close" aria-label="Đóng">×</button><p class="eyebrow">MỞ CỬA GÓC NHỎ</p><h2 id="auth-title">Chào bạn.</h2><p id="auth-description" class="muted">Đăng nhập để lưu phiên truy cập của bạn.</p><div class="auth-tabs"><button id="tab-login" class="active">Đăng nhập</button><button id="tab-signup">Tạo tài khoản khách</button></div><form id="auth-form"><label>Email<input id="auth-email" type="email" required autocomplete="email" placeholder="ban@example.com"></label><label>Mật khẩu<input id="auth-password" type="password" required minlength="8" autocomplete="current-password" placeholder="Ít nhất 8 ký tự"></label><button id="auth-submit" class="button button-dark full-button" type="submit">Đăng nhập</button><p id="auth-status" class="form-status" aria-live="polite"></p></form><p class="auth-note">Tài khoản khách không có quyền sửa hoặc xóa thơ.</p></dialog>
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
