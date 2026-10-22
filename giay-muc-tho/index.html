@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f5f0e6">
+  <meta name="description" content="Một góc nhỏ để đọc, lưu giữ và trò chuyện cùng những vần thơ.">
+  <title>Trang Thơ · Một góc để lặng yên</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="#home" aria-label="Trang Thơ, về trang chủ"><span class="brand-mark">✳</span><span>trang thơ<span class="brand-dot">.</span></span></a>
+    <nav class="main-nav" aria-label="Điều hướng chính">
+      <a href="#poems">Thư viện</a><a href="#about">Đôi dòng</a><a href="#poem-ai">Trò chuyện cùng thơ</a>
+    </nav>
+    <button id="auth-open" class="button button-outline button-small">Đăng nhập</button>
+    <button id="menu-toggle" class="menu-toggle" aria-label="Mở menu">☰</button>
+  </header>
+
+  <main>
+    <section id="home" class="hero wrap">
+      <div class="hero-copy">
+        <p class="eyebrow"><span class="tiny-rule"></span> NHỮNG ĐIỀU ĐƯỢC VIẾT RA</p>
+        <h1>Có những điều<br>chỉ thơ mới <em>giữ được.</em></h1>
+        <p class="hero-intro">Một góc nhỏ để cất giữ những câu chữ, những ngày đã qua và những điều chưa biết gọi thành tên.</p>
+        <div class="hero-actions"><a class="button button-dark" href="#poems">Đọc những vần thơ <span>↗</span></a><a class="text-link" href="#about">Về góc nhỏ này <span>→</span></a></div>
+        <div class="hero-note"><span class="note-line"></span><span>Viết để nhớ. Đọc để hiểu. Lặng yên để nghe mình.</span></div>
+      </div>
+      <div class="hero-art" aria-label="Minh họa trang giấy và hoa khô">
+        <div class="art-back"></div><div class="paper-sheet"><div class="paper-top">SỔ TAY · NHỮNG NGÀY THÁNG</div><div class="paper-flower">✳</div><p class="paper-verse">“Rồi một ngày<br>ta học cách dịu dàng<br>với những điều<br>không thể giữ.”</p><div class="paper-sign">— một dòng chưa đặt tên</div><div class="paper-stamp">VOL. 01<br>POETRY</div></div><span class="art-spark spark-one">✳</span><span class="art-spark spark-two">✧</span><span class="art-caption">GHI CHÉP TỪ NHỮNG NGÀY THƯỜNG</span>
+      </div>
+      <div class="hero-bottom"><span>01 / MỘT KHÔNG GIAN RIÊNG</span><span>THƠ · KÝ ỨC · TĨNH LẶNG</span></div>
+    </section>
+
+    <section id="poems" class="section section-paper">
+      <div class="wrap">
+        <div class="section-heading"><div><p class="eyebrow">LƯU TRỮ CẢM XÚC</p><h2>Thư viện <em>thơ.</em></h2></div><p class="section-aside">Mỗi bài thơ là một chiếc hộp nhỏ,<br>cất một phần của ngày hôm ấy.</p></div>
+        <div class="library-tools"><label class="search-box"><span>⌕</span><input id="poem-search" type="search" placeholder="Tìm một bài thơ, một từ khóa..." aria-label="Tìm thơ"></label><select id="poem-category" aria-label="Lọc theo chủ đề"><option value="">Tất cả chủ đề</option></select></div>
+        <div id="poem-list" class="poem-grid"><article class="poem-card placeholder-card"><p class="eyebrow">ĐANG MỞ SỔ...</p><h3>Những vần thơ sẽ ở đây</h3><p>Kết nối Supabase để tải thư viện thơ của bạn.</p></article></div>
+        <p id="poem-count" class="poem-count">Đang tải thư viện...</p>
+      </div>
+    </section>
+
+    <section id="about" class="section about-section">
+      <div class="wrap about-grid"><div class="about-symbol" aria-hidden="true"><span>“</span><div class="symbol-ring"></div><small>GHI CHÉP<br>VÀ LẶNG YÊN</small></div><div class="about-copy"><p class="eyebrow">ĐÔI DÒNG VỀ GÓC NHỎ</p><h2>Không cần thật nhiều lời.<br>Chỉ cần <em>đúng câu chữ.</em></h2><p>Đây là nơi lưu lại những bài thơ của tôi. Có bài viết từ một ngày nhiều nắng, có bài đến từ những khoảng lặng không dễ gọi tên. Bạn có thể đọc, tìm kiếm và mang theo một câu thơ mình thích.</p><p class="signature">— người viết, vẫn đang học cách gọi tên cảm xúc</p></div></div>
+    </section>
+
+    <section id="poem-ai" class="section ai-section"><div class="wrap ai-grid"><div class="ai-copy"><p class="eyebrow">MỘT NGƯỜI BẠN NHỎ</p><h2>Trò chuyện<br>cùng <em>những vần thơ.</em></h2><p>Hỏi về một bài thơ, tìm những câu chữ gần với tâm trạng, hoặc khám phá kho ghi chép. Người bạn này tìm câu trả lời từ thư viện đã được lưu, không gửi câu hỏi đến dịch vụ AI bên ngoài.</p><p class="ai-disclaimer">Đây là trợ lý tìm kiếm theo từ khóa và quy tắc, không phải mô hình AI ngôn ngữ có khả năng hiểu mọi câu hỏi.</p></div><div class="chat-panel"><div class="chat-head"><div class="chat-avatar">✳</div><div><strong>Người giữ trang thơ</strong><span><i></i> Đang ở đây, trong kho chữ</span></div><button id="clear-chat" class="icon-button" title="Xóa cuộc trò chuyện" aria-label="Xóa cuộc trò chuyện">↻</button></div><div id="chat-messages" class="chat-messages" aria-live="polite"><div class="chat-message bot-message">Xin chào. Bạn muốn tìm một bài thơ, một chủ đề, hay một câu chữ để bắt đầu? <div class="message-meta">NGƯỜI GIỮ TRANG THƠ</div></div></div><div class="suggestions"><button class="suggestion">Tìm thơ về nỗi nhớ</button><button class="suggestion">Có bài thơ nào về bình yên?</button></div><form id="chat-form" class="chat-form"><input id="chat-input" autocomplete="off" maxlength="500" placeholder="Viết điều bạn đang tìm..." aria-label="Nhập câu hỏi"><button class="send-button" aria-label="Gửi câu hỏi">↑</button></form><p class="chat-footnote">Câu trả lời được tạo từ thơ và ghi chú công khai trong kho kiến thức.</p></div></div></section>
+
+    <section id="account-area" class="section account-section hidden"><div class="wrap"><div class="section-heading"><div><p class="eyebrow">GÓC RIÊNG</p><h2 id="account-title">Tài khoản của bạn.</h2></div><button id="sign-out" class="button button-outline">Đăng xuất</button></div><p id="account-message" class="muted"></p><div id="admin-panel" class="admin-panel hidden"><div class="admin-heading"><div><p class="eyebrow">CHỈ DÀNH CHO QUẢN TRỊ VIÊN</p><h3>Quản lý thư viện</h3></div><button id="new-poem" class="button button-dark">＋ Viết bài mới</button></div><form id="poem-editor" class="editor-form hidden"><input id="edit-id" type="hidden"><label>Tiêu đề<input id="edit-title" maxlength="160" required placeholder="Tên bài thơ"></label><div class="editor-two"><label>Chủ đề<input id="edit-category" maxlength="60" placeholder="Ví dụ: Nỗi nhớ"></label><label>Trạng thái<select id="edit-published"><option value="false">Bản nháp</option><option value="true">Xuất bản công khai</option></select></label></div><label>Nội dung thơ<textarea id="edit-content" rows="12" maxlength="20000" required placeholder="Viết thơ ở đây... Mỗi dòng sẽ được giữ nguyên."></textarea></label><label>Ghi chú / từ khóa cho trợ lý thơ<textarea id="edit-notes" rows="3" maxlength="4000" placeholder="Tùy chọn: bối cảnh, chủ đề, từ khóa để AI tìm đúng bài hơn."></textarea></label><div class="editor-actions"><button class="button button-dark" type="submit">Lưu bài thơ</button><button id="cancel-edit" class="button button-outline" type="button">Hủy</button><span id="editor-status" class="muted"></span></div></form><div id="admin-poem-list" class="admin-list"></div><div class="knowledge-box"><div><h3>Kho kiến thức của trợ lý thơ</h3><p>Thêm ghi chú để trợ lý tra cứu khi trả lời. Không nhập thông tin riêng tư.</p></div><form id="knowledge-form" class="knowledge-form"><input id="knowledge-title" required maxlength="120" placeholder="Tiêu đề ghi chú"><textarea id="knowledge-content" required maxlength="5000" rows="3" placeholder="Nội dung kiến thức..."></textarea><label class="check-label"><input id="knowledge-published" type="checkbox" checked> Cho phép trợ lý sử dụng ghi chú này</label><button class="button button-outline" type="submit">Thêm ghi chú</button><span id="knowledge-status" class="muted"></span></form><div id="knowledge-list" class="knowledge-list"></div></div></div></div></section>
+  </main>
+
+  <footer class="site-footer"><div class="wrap footer-inner"><a class="brand" href="#home"><span class="brand-mark">✳</span><span>trang thơ<span class="brand-dot">.</span></span></a><p>Được viết bằng chữ, giữ lại bằng lòng.</p><a href="#home" class="back-top">LÊN ĐẦU TRANG ↑</a></div></footer>
+
+  <dialog id="auth-dialog" class="auth-dialog"><button id="auth-close" class="dialog-close" aria-label="Đóng">×</button><p class="eyebrow">MỞ CỬA GÓC NHỎ</p><h2 id="auth-title">Chào bạn.</h2><p id="auth-description" class="muted">Đăng nhập để lưu phiên truy cập của bạn.</p><div class="auth-tabs"><button id="tab-login" class="active">Đăng nhập</button><button id="tab-signup">Tạo tài khoản khách</button></div><form id="auth-form"><label>Email<input id="auth-email" type="email" required autocomplete="email" placeholder="ban@example.com"></label><label>Mật khẩu<input id="auth-password" type="password" required minlength="8" autocomplete="current-password" placeholder="Ít nhất 8 ký tự"></label><button id="auth-submit" class="button button-dark full-button" type="submit">Đăng nhập</button><p id="auth-status" class="form-status" aria-live="polite"></p></form><p class="auth-note">Tài khoản khách không có quyền sửa hoặc xóa thơ.</p></dialog>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
