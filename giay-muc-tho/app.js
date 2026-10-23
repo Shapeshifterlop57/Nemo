@@ -183,29 +183,136 @@
     const meta = document.createElement('div'); meta.className = 'message-meta'; meta.textContent = who === 'user' ? 'BẠN' : 'NGƯỜI GIỮ TRANG THƠ'; el.appendChild(meta);
     $('#chat-messages').appendChild(el); $('#chat-messages').scrollTop = $('#chat-messages').scrollHeight;
   }
-  function answerFromKnowledge(question) {
-    const q = normalize(question), words = wordSet(question);
-    if (!words.length) return 'Bạn thử hỏi bằng một chủ đề hoặc vài từ cụ thể nhé, chẳng hạn “nỗi nhớ”, “bình yên” hay tên một bài thơ.';
-    const candidates = [];
-    poems.filter(p => p.is_published || isAdmin).forEach(p => {
-      const hay = normalize([p.title,p.category,p.content,p.notes].join(' '));
-      let score = 0; for (const w of words) if (hay.includes(w)) score += (normalize(p.title).includes(w) ? 4 : normalize(p.category).includes(w) ? 3 : 1);
-      if (score) candidates.push({ type: 'poem', item: p, score });
-    });
-    knowledge.filter(k => k.is_published || isAdmin).forEach(k => {
-      const hay = normalize(k.title + ' ' + k.content); let score = 0;
-      for (const w of words) if (hay.includes(w)) score += (normalize(k.title).includes(w) ? 3 : 1);
-      if (score) candidates.push({ type: 'knowledge', item: k, score });
-    });
-    candidates.sort((a,b) => b.score - a.score);
-    if (!candidates.length) return 'Mình chưa tìm thấy câu chữ phù hợp trong kho thơ và ghi chú hiện có. Bạn có thể thử một từ khóa khác, hoặc tác giả có thể bổ sung thêm bài thơ và kiến thức trong bảng quản trị.';
-    const top = candidates.slice(0,3);
-    const lines = top.map((c,i) => c.type === 'poem' ? `${i+1}. “${c.item.title}”${c.item.category ? ` · ${c.item.category}` : ''}\n${c.item.content.split('\n').filter(Boolean).slice(0,3).join('\n')}${c.item.content.split('\n').filter(Boolean).length > 3 ? '\n…' : ''}` : `${i+1}. ${c.item.title}\n${c.item.content.slice(0,280)}${c.item.content.length > 280 ? '…' : ''}`);
-    let intro = 'Mình tìm thấy vài điều có thể gần với câu hỏi của bạn trong kho chữ:';
-    if (/y nghia|phan tich|noi dung|cam xuc|thong diep/.test(q)) intro = 'Dựa trên những ghi chép có sẵn, đây là những nội dung gần nhất mình tìm được. Mình chỉ tổng hợp từ kho chữ, không tự khẳng định ý nghĩa mà tác giả chưa ghi lại:';
-    else if (/viet|sang tac|goi y|lam tho/.test(q)) intro = 'Mình chưa thể sáng tác linh hoạt như một mô hình ngôn ngữ, nhưng có thể gợi ý chất liệu từ kho thơ hiện có:';
-    return intro + '\n\n' + lines.join('\n\n') + '\n\nBạn có thể thử thêm một từ khóa cụ thể để tìm sát hơn.';
+
+function answerFromKnowledge(question) {
+  const q = normalize(question);
+
+const meaningIntent =
+  /\b(noi ve|y nghia|phan tich|noi dung|thong diep|cam xuc|bai hoc|noi gi|muon noi gi|the hien gi|muon truyen tai gi)\b/.test(q);
+
+  const findIntent =
+    /\b(tim|tim kiem|cho xem|doc|bai tho nao)\b/.test(q);
+
+  const visiblePoems = poems.filter(
+    p => p.is_published || isAdmin
+  );
+
+  const visibleKnowledge = knowledge.filter(
+    k => k.is_published || isAdmin
+  );
+
+  // Bỏ các từ dùng để đặt câu hỏi, giữ lại cụm tên bài thơ.
+  const titleQuery = q
+    .replace(/\b(bai tho|bai|tho|noi ve|noi dung|y nghia|phan tich|cam xuc|thong diep|muon noi gi|noi gi|la gi|la the nao|gi)\b/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  // 1. Ưu tiên khớp chính xác tên bài thơ hoặc tên ghi chú.
+  const exactTitleMatch = item => {
+    const title = normalize(item.title);
+    return title.length > 0 &&
+      (title === titleQuery || q.includes(title));
+  };
+
+  const exactPoems = visiblePoems.filter(exactTitleMatch);
+  const exactNotes = visibleKnowledge.filter(exactTitleMatch);
+
+  // 2. Khi hỏi ý nghĩa, ưu tiên ghi chú giải thích đúng bài thơ.
+  if (meaningIntent && exactNotes.length) {
+    const note = exactNotes[0];
+    return `Bài thơ "${note.title}" nói về:\n\n${note.content}`;
   }
+
+  // 3. Đã tìm đúng bài nhưng kho chưa có lời giải thích.
+  if (exactPoems.length) {
+    const poem = exactPoems[0];
+
+    if (meaningIntent) {
+      return `Mình đã tìm thấy đúng bài thơ "${poem.title}".\n\n` +
+        `Tuy nhiên, kho kiến thức chưa có phần giải thích riêng cho bài này. ` +
+        `Mình không muốn tự suy diễn ý nghĩa khi chưa có đủ thông tin.\n\n` +
+        `Nội dung bài thơ:\n${poem.content}`;
+    }
+
+    return `Mình tìm thấy đúng bài thơ "${poem.title}"` +
+      `${poem.category ? ` · ${poem.category}` : ''}:\n\n${poem.content}`;
+  }
+
+  // 4. Nếu không khớp tên, mới tìm theo nội dung liên quan.
+  const words = wordSet(question);
+
+  if (!words.length) {
+    return 'Bạn cho mình biết tên bài thơ hoặc một chủ đề cụ thể nhé.';
+  }
+
+  const candidates = [];
+
+  visibleKnowledge.forEach(item => {
+    const title = normalize(item.title);
+    const content = normalize(item.content);
+    let score = 0;
+
+    for (const word of words) {
+      if (title.includes(word)) score += 8;
+      else if (content.includes(word)) score += 1;
+    }
+
+    if (score > 0) {
+      candidates.push({
+        type: 'knowledge',
+        item,
+        score
+      });
+    }
+  });
+
+  visiblePoems.forEach(item => {
+    const title = normalize(item.title);
+    const content = normalize(item.content);
+    const category = normalize(item.category);
+
+    let score = 0;
+
+    for (const word of words) {
+      if (title.includes(word)) score += 8;
+      else if (category.includes(word)) score += 3;
+      else if (content.includes(word)) score += 1;
+    }
+
+    if (score > 0) {
+      candidates.push({
+        type: 'poem',
+        item,
+        score
+      });
+    }
+  });
+
+  candidates.sort((a, b) => b.score - a.score);
+
+  if (!candidates.length) {
+    return 'Mình chưa tìm thấy nội dung phù hợp trong kho thơ. ' +
+      'Bạn thử nhập tên bài thơ chính xác hơn nhé.';
+  }
+
+  const best = candidates[0];
+
+  if (meaningIntent && best.type === 'poem') {
+    return `Mình tìm thấy bài thơ "${best.item.title}", nhưng chưa có ` +
+      'ghi chú giải thích đủ phù hợp trong kho kiến thức. ' +
+      'Bạn có thể bổ sung phần giải thích để mình trả lời chính xác hơn.';
+  }
+
+  if (best.type === 'knowledge') {
+    return `${best.item.title}\n\n${best.item.content}`;
+  }
+
+  return `Mình tìm thấy bài thơ "${best.item.title}"` +
+    `${best.item.category ? ` · ${best.item.category}` : ''}:\n\n` +
+    best.item.content;
+}
+
+  
   $('#chat-form').addEventListener('submit', e => {
     e.preventDefault(); const input = $('#chat-input'), question = input.value.trim(); if (!question) return;
     addChatMessage(question, 'user'); input.value = '';
