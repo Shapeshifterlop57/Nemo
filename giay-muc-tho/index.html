@@ -55,31 +55,35 @@
   </main>
 
 
-<footer class="site-footer">
-  <div class="wrap footer-inner">
-    <a class="brand" href="#home" aria-label="Về đầu trang">
-      <span class="brand-mark">✳</span>
-      <span>trang thơ<span class="brand-dot">.</span></span>
-    </a>
 
-    <p>Được viết bằng chữ, giữ lại bằng lòng.</p>
-
-    <a
-      class="facebook-link"
-      href="https://www.facebook.com/tran.inh.phong.455771/"
-      target="_blank"
-      rel="noopener noreferrer"
-      aria-label="Facebook cá nhân"
-    >
-      Facebook cá nhân ↗
-    </a>
-
-    <a href="#home" class="back-top">LÊN ĐẦU TRANG ↑</a>
-  </div>
-</footer>
 
   <dialog id="auth-dialog" class="auth-dialog"><button id="auth-close" class="dialog-close" aria-label="Đóng">×</button><p class="eyebrow">MỞ CỬA GÓC NHỎ</p><h2 id="auth-title">Chào bạn.</h2><p id="auth-description" class="muted">Đăng nhập để lưu phiên truy cập của bạn.</p><div class="auth-tabs"><button id="tab-login" class="active">Đăng nhập</button><button id="tab-signup">Tạo tài khoản khách</button></div><form id="auth-form"><label>Email<input id="auth-email" type="email" required autocomplete="email" placeholder="ban@example.com"></label><label>Mật khẩu<input id="auth-password" type="password" required minlength="8" autocomplete="current-password" placeholder="Ít nhất 8 ký tự"></label><button id="auth-submit" class="button button-dark full-button" type="submit">Đăng nhập</button><p id="auth-status" class="form-status" aria-live="polite"></p></form><p class="auth-note">Tài khoản khách không có quyền sửa hoặc xóa thơ.</p></dialog>
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  
+  <footer class="site-footer">
+    <div class="wrap footer-inner">
+      <a class="brand" href="#home">
+        <span class="brand-mark">✳</span>
+        <span>trang thơ<span class="brand-dot">.</span></span>
+      </a>
+
+      <p>Được viết bằng chữ, giữ lại bằng lòng.</p>
+
+      <a class="facebook-link"
+         href="https://www.facebook.com/tran.inh.phong.455771/"
+         target="_blank"
+         rel="noopener noreferrer">
+        <svg viewBox="0 0 24 24" width="22" height="22"
+             fill="currentColor" aria-hidden="true">
+          <path d="M24 12a12 12 0 1 0-13.875 11.854v-8.386H7.078V12h3.047V9.356c0-3.007 1.792-4.668 4.533-4.668 1.312 0 2.686.234 2.686.234v2.953h-1.513c-1.49 0-1.956.925-1.956 1.874V12h3.328l-.532 3.468h-2.796v8.386A12.003 12.003 0 0 0 24 12z"/>
+        </svg>
+        <span>Trần Đình Phong</span>
+      </a>
+
+      <a href="#home" class="back-top">LÊN ĐẦU TRANG ↑</a>
+    </div>
+  </footer>
+
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="config.js"></script>
   <script src="app.js"></script>
