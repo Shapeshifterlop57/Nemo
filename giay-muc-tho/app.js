@@ -402,8 +402,13 @@
     const detail = $('#vip-contact-detail').value.trim(); if (!detail) return;
     setStatus('#vip-request-status', 'Đang gửi đăng ký...');
     const row = { user_id: currentUser.id, email: currentUser.email || $('#auth-email').value.trim(), contact_method: $('#vip-contact-method').value, contact_detail: detail, message: $('#vip-message').value.trim(), status: 'pending' };
-    const { error } = await db.from('vip_requests').upsert(row, { onConflict: 'user_id' });
-    if (error) { setStatus('#vip-request-status', 'Không gửi được: ' + error.message, true); return; }
+const { error } = await db
+  .from('vip_requests')
+  .upsert({
+    ...row,
+    reviewed_by: null,
+    reviewed_at: null
+  }, { onConflict: 'user_id' });    if (error) { setStatus('#vip-request-status', 'Không gửi được: ' + error.message, true); return; }
     await logSiteEvent('vip_request'); setStatus('#vip-request-status', 'Đã gửi. Chờ admin xét duyệt nhé.'); await updateAccount();
   });
   $('#refresh-vip').addEventListener('click', loadVipRequests);
