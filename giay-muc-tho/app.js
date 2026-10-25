@@ -44,6 +44,14 @@
     poems = data || [];
     renderPoems();
     if (isAdmin) renderAdminPoems();
+    const sharedPoemId = new URLSearchParams(window.location.search).get('poem');
+    if (sharedPoemId && !window.__mienChuSharedPoemOpened) {
+      const sharedPoem = poems.find(p => p.id === sharedPoemId);
+      if (sharedPoem && (isAdmin || sharedPoem.is_published)) {
+        window.__mienChuSharedPoemOpened = true;
+        openPoem(sharedPoemId);
+      }
+    }
   }
   async function loadStories() {
     if (!db) return;
@@ -133,12 +141,13 @@
     $('#story-count').textContent = `${filtered.length.toString().padStart(2, '0')} TRUYỆN${search || category ? ' · ĐÃ LỌC' : ''}`;
   }
 
-  async function shareLiteraryItem({ title, description = '', storyId = '', chapterId = '' }) {
+  async function shareLiteraryItem({ title, description = '', storyId = '', chapterId = '', poemId = '' }) {
     const url = new URL(window.location.href);
     url.search = '';
     url.hash = '';
     if (storyId) url.searchParams.set('story', storyId);
     if (chapterId) url.searchParams.set('chapter', chapterId);
+    if (poemId) url.searchParams.set('poem', poemId);
     const shareData = { title: `${title} · Miền Chữ`, text: description || `Đọc “${title}” trên Miền Chữ.`, url: url.href };
     try {
       if (navigator.share) {
@@ -311,8 +320,13 @@
   function openPoem(id) {
     const p = poems.find(x => x.id === id); if (!p) return;
     const dlg = document.createElement('dialog'); dlg.className = 'poem-dialog';
-    dlg.innerHTML = `<button class="dialog-close" aria-label="Đóng">×</button><p class="eyebrow">${escapeHTML(p.category || 'THƠ TỰ DO')}</p><h2>${escapeHTML(p.title)}</h2><p class="poem-date">${formatDate(p.created_at)}${!p.is_published ? ' · BẢN NHÁP' : ''}</p><div class="poem-full-content">${escapeHTML(p.content)}</div>${p.notes && isAdmin ? `<hr><p class="muted">Ghi chú riêng: ${escapeHTML(p.notes)}</p>` : ''}`;
-    document.body.appendChild(dlg); dlg.querySelector('.dialog-close').addEventListener('click', () => dlg.close()); dlg.addEventListener('click', e => { if (e.target === dlg) dlg.close(); }); dlg.addEventListener('close', () => dlg.remove()); dlg.showModal();
+    dlg.innerHTML = `<button class="dialog-close" aria-label="Đóng">×</button><p class="eyebrow">${escapeHTML(p.category || 'THƠ TỰ DO')}</p><h2>${escapeHTML(p.title)}</h2><p class="poem-date">${formatDate(p.created_at)}${!p.is_published ? ' · BẢN NHÁP' : ''}</p><div class="poem-full-content">${escapeHTML(p.content)}</div><div class="reader-controls"><button class="button button-outline" type="button" data-share-poem="${p.id}">↗ Chia sẻ bài thơ</button></div>${p.notes && isAdmin ? `<hr><p class="muted">Ghi chú riêng: ${escapeHTML(p.notes)}</p>` : ''}`;
+    document.body.appendChild(dlg);
+    dlg.querySelector('.dialog-close').addEventListener('click', () => dlg.close());
+    dlg.querySelector('[data-share-poem]')?.addEventListener('click', () => shareLiteraryItem({ title: p.title, description: p.content, poemId: p.id }));
+    dlg.addEventListener('click', e => { if (e.target === dlg) dlg.close(); });
+    dlg.addEventListener('close', () => dlg.remove());
+    dlg.showModal();
   }
   function setAuthMode(mode) {
     authMode = mode;
