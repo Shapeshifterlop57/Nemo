@@ -609,20 +609,179 @@ function answerFromKnowledge(question) {
     const list = [...rows.values()];
     host.innerHTML = list.length ? list.map(r => `<div class="admin-row"><div><strong>${escapeHTML(r.email || 'Không có email')}</strong><small>ID: ${escapeHTML(r.user_id)}</small><small>Trạng thái VIP: ${r.active ? 'ĐANG HOẠT ĐỘNG' : escapeHTML(r.status || 'Chưa có VIP')} ${r.created_at ? ' · Đơn lúc ' + new Date(r.created_at).toLocaleString('vi-VN') : ''}</small></div><div class="admin-row-actions"><span class="status-pill ${r.active ? 'status-active' : ''}">${r.active ? 'VIP' : 'Thường / chờ duyệt'}</span></div></div>`).join('') : '<p class="muted">Chưa có thành viên nào gửi đơn VIP.</p>';
   }
-  async function loadViewStats() {
-    if (!db || !isAdmin) return; const host = $('#view-stats'); if (!host) return;
-    host.innerHTML = '<p class="muted">Đang tải...</p>';
-    const { data, error } = await db.from('access_logs').select('page_path,event_type,created_at').order('created_at', { ascending: false }).limit(5000);
-    if (error) { host.innerHTML = `<p class="muted">Không tải được thống kê: ${escapeHTML(error.message)}</p>`; return; }
-    const rows = data || []; const views = rows.filter(r => ['page_view','story_open','chapter_open'].includes(r.event_type));
-    const todayKey = new Date().toLocaleDateString('en-CA');
-    const todayViews = views.filter(r => new Date(r.created_at).toLocaleDateString('en-CA') === todayKey).length;
-    const byStory = new Map(); const byDay = new Map();
-    views.forEach(r => { const path = r.page_path || '/'; const match = path.match(/^\/stories\/([^/]+)/); const key = match ? match[1] : (r.event_type === 'page_view' ? 'Trang chủ / trang khác' : path); byStory.set(key, (byStory.get(key)||0)+1); const day = new Date(r.created_at).toLocaleDateString('vi-VN'); byDay.set(day, (byDay.get(day)||0)+1); });
-    const storyRows = [...byStory.entries()].sort((a,b)=>b[1]-a[1]).slice(0,10).map(([name,count])=>`<div class="admin-row"><div><strong>${escapeHTML(name)}</strong><small>Lượt mở trang/truyện/chương đã ghi nhận</small></div><strong>${count}</strong></div>`).join('');
-    const dayRows = [...byDay.entries()].slice(0,14).map(([day,count])=>`<div class="admin-row"><div><strong>${escapeHTML(day)}</strong></div><strong>${count}</strong></div>`).join('');
-    host.innerHTML = `<div class="view-stat-grid"><article><strong>${views.length}</strong><span>Sự kiện xem trong 5.000 log gần nhất</span></article><article><strong>${todayViews}</strong><span>Sự kiện xem hôm nay trong dữ liệu đã tải</span></article><article><strong>${byStory.size}</strong><span>Trang/truyện có lượt xem</span></article></div><div class="view-detail-grid"><div><h4>Lượt xem theo truyện / trang</h4>${storyRows || '<p class="muted">Chưa có dữ liệu.</p>'}</div><div><h4>Lượt xem theo ngày</h4>${dayRows || '<p class="muted">Chưa có dữ liệu.</p>'}</div></div>`;
+  
+
+async function loadViewStats() {
+  if (!db || !isAdmin) return;
+
+  const host = $('#view-stats');
+  if (!host) return;
+
+  host.innerHTML = '<p class="muted">Đang tải...</p>';
+
+  const { data, error } = await db
+    .from('access_logs')
+    .select('page_path,event_type,created_at')
+    .order('created_at', { ascending: false })
+    .limit(5000);
+
+  if (error) {
+    host.innerHTML =
+      `<p class="muted">Không tải được thống kê: ${escapeHTML(error.message)}</p>`;
+    return;
   }
+
+  const rows = data || [];
+  const views = rows.filter(r =>
+    ['page_view', 'story_open', 'chapter_open'].includes(r.event_type)
+  );
+
+  const localDateKey = value => {
+    const d = new Date(value);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  };
+
+  const todayKey = localDateKey(new Date());
+  const todayViews = views.filter(
+    r => localDateKey(r.created_at) === todayKey
+  ).length;
+
+  const storyMap = new Map(
+    (stories || []).map(s => [String(s.id), s.title])
+  );
+
+  const chapterMap = new Map(
+    (storyChapters || []).map(ch => [
+      String(ch.id),
+      {
+        title: ch.title,
+        number: ch.chapter_number,
+        storyId: String(ch.story_id)
+      }
+    ])
+  );
+
+  const byItem = new Map();
+  const byDay = new Map();
+
+  views.forEach(r => {
+    const path = r.page_path || '/';
+    const storyMatch = path.match(/\/stories\/([^/?#]+)/);
+    const chapterMatch = path.match(/\/chapters\/([^/?#]+)/);
+
+    let label = 'Trang chủ / trang khác';
+    let key = label;
+
+    if (storyMatch) {
+      const storyId = storyMatch[1];
+      const storyTitle = storyMap.get(storyId);
+
+      if (chapterMatch) {
+        const chapterId = chapterMatch[1];
+        const chapter = chapterMap.get(chapterId);
+
+        if (chapter) {
+          const parentTitle = storyMap.get(chapter.storyId) || 'Truyện chưa xác định';
+          label = `${parentTitle} · Chương ${chapter.number}: ${chapter.title}`;
+          key = `chapter:${chapterId}`;
+        } else {
+          label = `${storyTitle || 'Truyện chưa xác định'} · Chương chưa xác định`;
+          key = `chapter:${chapterId}`;
+        }
+      } else {
+        label = storyTitle || 'Truyện chưa xác định';
+        key = `story:${storyId}`;
+      }
+    } else if (path.includes('#poems')) {
+      label = 'Thư viện thơ';
+      key = 'page:poems';
+    } else if (path.includes('#stories')) {
+      label = 'Thư viện truyện';
+      key = 'page:stories';
+    } else if (path.includes('#about')) {
+      label = 'Đôi dòng';
+      key = 'page:about';
+    } else if (path.includes('#poem-ai')) {
+      label = 'Trò chuyện';
+      key = 'page:poem-ai';
+    } else if (path === '/' || path === '' || path.includes('#home')) {
+      label = 'Trang chủ';
+      key = 'page:home';
+    } else if (r.event_type === 'story_open') {
+      label = 'Lượt mở truyện cũ chưa xác định';
+      key = 'legacy:story';
+    } else if (r.event_type === 'chapter_open') {
+      label = 'Lượt mở chương cũ chưa xác định';
+      key = 'legacy:chapter';
+    }
+
+    if (!byItem.has(key)) {
+      byItem.set(key, { label, count: 0 });
+    }
+    byItem.get(key).count++;
+
+    const day = new Date(r.created_at).toLocaleDateString('vi-VN');
+    byDay.set(day, (byDay.get(day) || 0) + 1);
+  });
+
+  const storyRows = [...byItem.values()]
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 20)
+    .map(item => `
+      <div class="admin-row">
+        <div>
+          <strong>${escapeHTML(item.label)}</strong>
+          <small>Lượt mở đã ghi nhận</small>
+        </div>
+        <strong>${item.count}</strong>
+      </div>
+    `).join('');
+
+  const dayRows = [...byDay.entries()]
+    .sort((a, b) => {
+      const parse = value => {
+        const parts = value.split('/');
+        return new Date(+parts[2], +parts[1] - 1, +parts[0]).getTime();
+      };
+      return parse(b[0]) - parse(a[0]);
+    })
+    .slice(0, 14)
+    .map(([day, count]) => `
+      <div class="admin-row">
+        <div><strong>${escapeHTML(day)}</strong></div>
+        <strong>${count}</strong>
+      </div>
+    `).join('');
+
+  host.innerHTML = `
+    <div class="view-stat-grid">
+      <article>
+        <strong>${views.length}</strong>
+        <span>Sự kiện xem trong 5.000 nhật ký gần nhất</span>
+      </article>
+      <article>
+        <strong>${todayViews}</strong>
+        <span>Sự kiện xem hôm nay trong dữ liệu đã tải</span>
+      </article>
+      <article>
+        <strong>${byItem.size}</strong>
+        <span>Truyện, chương và trang có lượt xem</span>
+      </article>
+    </div>
+    <div class="view-detail-grid">
+      <div>
+        <h4>Lượt xem theo truyện / chương / trang</h4>
+        ${storyRows || '<p class="muted">Chưa có dữ liệu.</p>'}
+      </div>
+      <div>
+        <h4>Lượt xem theo ngày</h4>
+        ${dayRows || '<p class="muted">Chưa có dữ liệu.</p>'}
+      </div>
+    </div>
+  `;
+}
+
+  
   setupAdminTabs();
 
   if (db) {
