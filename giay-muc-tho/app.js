@@ -69,6 +69,15 @@
     storyChapters = chapterData || [];
     renderStories();
     if (isAdmin) renderAdminStories();
+    const sharedChapterId = new URLSearchParams(window.location.search).get('chapter');
+    const sharedStoryId = new URLSearchParams(window.location.search).get('story');
+    if (sharedChapterId && !window.__mienChuSharedRouteOpened) {
+      const sharedChapter = storyChapters.find(ch => ch.id === sharedChapterId);
+      if (sharedChapter && (isAdmin || sharedChapter.is_published)) { window.__mienChuSharedRouteOpened = true; openChapter(sharedChapterId); }
+    } else if (sharedStoryId && !window.__mienChuSharedRouteOpened) {
+      const sharedStory = stories.find(st => st.id === sharedStoryId);
+      if (sharedStory && (isAdmin || sharedStory.is_published)) { window.__mienChuSharedRouteOpened = true; openStory(sharedStoryId); }
+    }
   }
 
   async function loadKnowledge() {
@@ -124,6 +133,27 @@
     $('#story-count').textContent = `${filtered.length.toString().padStart(2, '0')} TRUYỆN${search || category ? ' · ĐÃ LỌC' : ''}`;
   }
 
+  async function shareLiteraryItem({ title, description = '', storyId = '', chapterId = '' }) {
+    const url = new URL(window.location.href);
+    url.search = '';
+    url.hash = '';
+    if (storyId) url.searchParams.set('story', storyId);
+    if (chapterId) url.searchParams.set('chapter', chapterId);
+    const shareData = { title: `${title} · Miền Chữ`, text: description || `Đọc “${title}” trên Miền Chữ.`, url: url.href };
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+      } else if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(url.href);
+        showToast('Đã sao chép liên kết chia sẻ!');
+      } else {
+        window.prompt('Sao chép liên kết này để chia sẻ:', url.href);
+      }
+    } catch (error) {
+      if (error && error.name !== 'AbortError') showToast('Chưa chia sẻ được. Bạn có thể sao chép đường dẫn trên thanh địa chỉ.');
+    }
+  }
+
   async function openStory(id) {
     const story = stories.find(s => s.id === id);
     if (!story || (!story.is_published && !isAdmin)) return;
@@ -137,10 +167,11 @@
       : '<p class="muted">Chưa có chương nào được xuất bản.</p>';
     const dlg = document.createElement('dialog');
     dlg.className = 'poem-dialog story-dialog';
-    dlg.innerHTML = `<button class="dialog-close" aria-label="Đóng">×</button><p class="eyebrow">${escapeHTML(story.category || 'TRUYỆN')}${!story.is_published ? ' · BẢN NHÁP RIÊNG' : ''}</p><h2>${escapeHTML(story.title)}</h2><p class="poem-date">${formatDate(story.created_at)}</p><div class="story-dialog-synopsis">${escapeHTML(story.synopsis || 'Truyện chưa có phần giới thiệu.')}</div><div class="story-dialog-chapters"><h3>Các chương</h3>${chapterHtml}</div><button class="button button-outline reading-save" type="button" data-bookmark-story="${story.id}">☆ Lưu truyện</button>`;
+    dlg.innerHTML = `<button class="dialog-close" aria-label="Đóng">×</button><p class="eyebrow">${escapeHTML(story.category || 'TRUYỆN')}${!story.is_published ? ' · BẢN NHÁP RIÊNG' : ''}</p><h2>${escapeHTML(story.title)}</h2><p class="poem-date">${formatDate(story.created_at)}</p><div class="story-dialog-synopsis">${escapeHTML(story.synopsis || 'Truyện chưa có phần giới thiệu.')}</div><div class="story-dialog-chapters"><h3>Các chương</h3>${chapterHtml}</div><div class="reader-controls"><button class="button button-outline reading-save" type="button" data-bookmark-story="${story.id}">☆ Lưu truyện</button><button class="button button-outline" type="button" data-share-story="${story.id}">↗ Chia sẻ truyện</button></div>`;
     document.body.appendChild(dlg);
     dlg.querySelector('.dialog-close').addEventListener('click', () => dlg.close());
     dlg.querySelector('[data-bookmark-story]')?.addEventListener('click', () => toggleBookmark({ type: 'story', storyId: story.id, title: story.title, subtitle: story.category || 'Truyện' }));
+    dlg.querySelector('[data-share-story]')?.addEventListener('click', () => shareLiteraryItem({ title: story.title, description: story.synopsis || '', storyId: story.id }));
     renderDiscussion(dlg, story, null);
     dlg.addEventListener('click', e => { if (e.target === dlg) dlg.close(); });
     dlg.addEventListener('close', () => dlg.remove());
@@ -162,10 +193,11 @@
     saveReadingHistory({ type: 'chapter', storyId: story.id, chapterId: chapter.id, title: story.title, subtitle: `Chương ${chapter.chapter_number}: ${chapter.title}`, at: new Date().toISOString() });
     const dlg = document.createElement('dialog');
     dlg.className = 'poem-dialog chapter-dialog';
-    dlg.innerHTML = `<button class="dialog-close" aria-label="Đóng">×</button><p class="chapter-dialog-story">${escapeHTML(story.title)}</p><p class="chapter-dialog-label">CHƯƠNG ${chapter.chapter_number}${!chapter.is_published ? ' · BẢN NHÁP RIÊNG' : ''}</p><h2 class="chapter-dialog-title">${escapeHTML(chapter.title)}</h2><p class="poem-date">${formatDate(chapter.created_at)}</p><div class="poem-full-content reader-content">${escapeHTML(chapter.content)}</div><div class="reader-controls"><button class="button button-outline" type="button" data-reader-size="minus">A−</button><button class="button button-outline" type="button" data-reader-size="plus">A+</button><button class="button button-outline" type="button" data-bookmark-chapter="${chapter.id}">☆ Đánh dấu chương</button></div>`;
+    dlg.innerHTML = `<button class="dialog-close" aria-label="Đóng">×</button><p class="chapter-dialog-story">${escapeHTML(story.title)}</p><p class="chapter-dialog-label">CHƯƠNG ${chapter.chapter_number}${!chapter.is_published ? ' · BẢN NHÁP RIÊNG' : ''}</p><h2 class="chapter-dialog-title">${escapeHTML(chapter.title)}</h2><p class="poem-date">${formatDate(chapter.created_at)}</p><div class="poem-full-content reader-content">${escapeHTML(chapter.content)}</div><div class="reader-controls"><button class="button button-outline" type="button" data-reader-size="minus">A−</button><button class="button button-outline" type="button" data-reader-size="plus">A+</button><button class="button button-outline" type="button" data-bookmark-chapter="${chapter.id}">☆ Đánh dấu chương</button><button class="button button-outline" type="button" data-share-chapter="${chapter.id}">↗ Chia sẻ chương</button></div>`;
     document.body.appendChild(dlg);
     dlg.querySelector('.dialog-close').addEventListener('click', () => dlg.close());
     dlg.querySelector('[data-bookmark-chapter]')?.addEventListener('click', () => toggleBookmark({ type: 'chapter', storyId: story.id, chapterId: chapter.id, title: story.title, subtitle: `Chương ${chapter.chapter_number}: ${chapter.title}` }));
+    dlg.querySelector('[data-share-chapter]')?.addEventListener('click', () => shareLiteraryItem({ title: `${story.title} · Chương ${chapter.chapter_number}: ${chapter.title}`, description: story.synopsis || '', storyId: story.id, chapterId: chapter.id }));
     dlg.querySelector('[data-reader-size="minus"]')?.addEventListener('click', () => changeReaderSize(-1));
     dlg.querySelector('[data-reader-size="plus"]')?.addEventListener('click', () => changeReaderSize(1));
     renderDiscussion(dlg, story, chapter);
