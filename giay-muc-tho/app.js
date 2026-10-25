@@ -128,7 +128,8 @@
     const story = stories.find(s => s.id === id);
     if (!story || (!story.is_published && !isAdmin)) return;
     if (!isAdmin && !vipActive) { showToast('Truyện dành cho thành viên VIP đã được duyệt. Hãy đăng nhập và đăng ký VIP nhé.'); $('#vip-area')?.scrollIntoView({ behavior: 'smooth', block: 'center' }); return; }
-    await logSiteEvent('story_open');
+    await logSiteEvent('story_open', `/stories/${story.id}`);
+    saveReadingHistory({ type: 'story', storyId: story.id, title: story.title, subtitle: story.category || 'Truyện', at: new Date().toISOString() });
     const chapters = storyChapters.filter(ch => ch.story_id === id && (isAdmin || (story.is_published && ch.is_published)))
       .sort((a, b) => a.chapter_number - b.chapter_number);
     const chapterHtml = chapters.length
@@ -136,9 +137,10 @@
       : '<p class="muted">Chưa có chương nào được xuất bản.</p>';
     const dlg = document.createElement('dialog');
     dlg.className = 'poem-dialog story-dialog';
-    dlg.innerHTML = `<button class="dialog-close" aria-label="Đóng">×</button><p class="eyebrow">${escapeHTML(story.category || 'TRUYỆN')}${!story.is_published ? ' · BẢN NHÁP RIÊNG' : ''}</p><h2>${escapeHTML(story.title)}</h2><p class="poem-date">${formatDate(story.created_at)}</p><div class="story-dialog-synopsis">${escapeHTML(story.synopsis || 'Truyện chưa có phần giới thiệu.')}</div><div class="story-dialog-chapters"><h3>Các chương</h3>${chapterHtml}</div>`;
+    dlg.innerHTML = `<button class="dialog-close" aria-label="Đóng">×</button><p class="eyebrow">${escapeHTML(story.category || 'TRUYỆN')}${!story.is_published ? ' · BẢN NHÁP RIÊNG' : ''}</p><h2>${escapeHTML(story.title)}</h2><p class="poem-date">${formatDate(story.created_at)}</p><div class="story-dialog-synopsis">${escapeHTML(story.synopsis || 'Truyện chưa có phần giới thiệu.')}</div><div class="story-dialog-chapters"><h3>Các chương</h3>${chapterHtml}</div><button class="button button-outline reading-save" type="button" data-bookmark-story="${story.id}">☆ Lưu truyện</button>`;
     document.body.appendChild(dlg);
     dlg.querySelector('.dialog-close').addEventListener('click', () => dlg.close());
+    dlg.querySelector('[data-bookmark-story]')?.addEventListener('click', () => toggleBookmark({ type: 'story', storyId: story.id, title: story.title, subtitle: story.category || 'Truyện' }));
     dlg.addEventListener('click', e => { if (e.target === dlg) dlg.close(); });
     dlg.addEventListener('close', () => dlg.remove());
     dlg.querySelectorAll('[data-open-chapter]').forEach(button => button.addEventListener('click', () => {
@@ -155,12 +157,16 @@
     const story = stories.find(s => s.id === chapter.story_id);
     if (!story || ((!story.is_published || !chapter.is_published) && !isAdmin)) return;
     if (!isAdmin && !vipActive) { showToast('Chỉ thành viên VIP đã được duyệt mới đọc chương truyện.'); $('#vip-area')?.scrollIntoView({ behavior: 'smooth', block: 'center' }); return; }
-    await logSiteEvent('chapter_open');
+    await logSiteEvent('chapter_open', `/stories/${story.id}/chapters/${chapter.id}`);
+    saveReadingHistory({ type: 'chapter', storyId: story.id, chapterId: chapter.id, title: story.title, subtitle: `Chương ${chapter.chapter_number}: ${chapter.title}`, at: new Date().toISOString() });
     const dlg = document.createElement('dialog');
     dlg.className = 'poem-dialog chapter-dialog';
-    dlg.innerHTML = `<button class="dialog-close" aria-label="Đóng">×</button><p class="chapter-dialog-story">${escapeHTML(story.title)}</p><p class="chapter-dialog-label">CHƯƠNG ${chapter.chapter_number}${!chapter.is_published ? ' · BẢN NHÁP RIÊNG' : ''}</p><h2 class="chapter-dialog-title">${escapeHTML(chapter.title)}</h2><p class="poem-date">${formatDate(chapter.created_at)}</p><div class="poem-full-content">${escapeHTML(chapter.content)}</div>`;
+    dlg.innerHTML = `<button class="dialog-close" aria-label="Đóng">×</button><p class="chapter-dialog-story">${escapeHTML(story.title)}</p><p class="chapter-dialog-label">CHƯƠNG ${chapter.chapter_number}${!chapter.is_published ? ' · BẢN NHÁP RIÊNG' : ''}</p><h2 class="chapter-dialog-title">${escapeHTML(chapter.title)}</h2><p class="poem-date">${formatDate(chapter.created_at)}</p><div class="poem-full-content reader-content">${escapeHTML(chapter.content)}</div><div class="reader-controls"><button class="button button-outline" type="button" data-reader-size="minus">A−</button><button class="button button-outline" type="button" data-reader-size="plus">A+</button><button class="button button-outline" type="button" data-bookmark-chapter="${chapter.id}">☆ Đánh dấu chương</button></div>`;
     document.body.appendChild(dlg);
     dlg.querySelector('.dialog-close').addEventListener('click', () => dlg.close());
+    dlg.querySelector('[data-bookmark-chapter]')?.addEventListener('click', () => toggleBookmark({ type: 'chapter', storyId: story.id, chapterId: chapter.id, title: story.title, subtitle: `Chương ${chapter.chapter_number}: ${chapter.title}` }));
+    dlg.querySelector('[data-reader-size="minus"]')?.addEventListener('click', () => changeReaderSize(-1));
+    dlg.querySelector('[data-reader-size="plus"]')?.addEventListener('click', () => changeReaderSize(1));
     dlg.addEventListener('click', e => { if (e.target === dlg) dlg.close(); });
     dlg.addEventListener('close', () => dlg.remove());
     dlg.showModal();
@@ -213,9 +219,9 @@
     await loadStories();
   }
 
-  async function logSiteEvent(eventType = 'page_view') {
+  async function logSiteEvent(eventType = 'page_view', pagePath = null) {
     if (!db) return;
-    try { await db.rpc('log_site_event', { p_page_path: location.pathname + location.hash, p_event_type: eventType }); } catch (_) { /* logging should not interrupt reading */ }
+    try { await db.rpc('log_site_event', { p_page_path: pagePath || (location.pathname + location.hash), p_event_type: eventType }); } catch (_) { /* logging should not interrupt reading */ }
   }
 
   async function loadVipRequests() {
@@ -245,22 +251,8 @@
     e.preventDefault(); if (!db || !currentUser) { showToast('Hãy đăng nhập trước.'); return; }
     const detail = $('#vip-contact-detail').value.trim(); if (!detail) return;
     setStatus('#vip-request-status', 'Đang gửi đăng ký...');
-
-const row = {
-  user_id: currentUser.id,
-  email: currentUser.email || $('#auth-email').value.trim(),
-  contact_method: $('#vip-contact-method').value,
-  contact_detail: detail,
-  message: $('#vip-message').value.trim(),
-  status: 'pending',
-  reviewed_by: null,
-  reviewed_at: null
-};
-
-const { error } = await db
-  .from('vip_requests')
-  .upsert(row, { onConflict: 'user_id' });
-
+    const row = { user_id: currentUser.id, email: currentUser.email || $('#auth-email').value.trim(), contact_method: $('#vip-contact-method').value, contact_detail: detail, message: $('#vip-message').value.trim(), status: 'pending' };
+    const { error } = await db.from('vip_requests').upsert(row, { onConflict: 'user_id' });
     if (error) { setStatus('#vip-request-status', 'Không gửi được: ' + error.message, true); return; }
     await logSiteEvent('vip_request'); setStatus('#vip-request-status', 'Đã gửi. Chờ admin xét duyệt nhé.'); await updateAccount();
   });
@@ -553,6 +545,24 @@ function answerFromKnowledge(question) {
   $('#menu-toggle').addEventListener('click', () => $('.main-nav').classList.toggle('open'));
   $$('.main-nav a').forEach(a => a.addEventListener('click', () => $('.main-nav').classList.remove('open')));
 
+  const READING_HISTORY_KEY = 'giay-muc-tho-reading-history-v1';
+  const READING_BOOKMARK_KEY = 'giay-muc-tho-reading-bookmarks-v1';
+  function readLocalList(key) { try { const value = JSON.parse(localStorage.getItem(key) || '[]'); return Array.isArray(value) ? value : []; } catch (_) { return []; } }
+  function saveReadingHistory(item) { const list = readLocalList(READING_HISTORY_KEY).filter(x => !(x.type === item.type && x.chapterId === item.chapterId && x.storyId === item.storyId)); list.unshift(item); localStorage.setItem(READING_HISTORY_KEY, JSON.stringify(list.slice(0,30))); renderReadingShelf(); }
+  function toggleBookmark(item) { const list = readLocalList(READING_BOOKMARK_KEY); const key = x => `${x.type}:${x.storyId}:${x.chapterId || ''}`; const exists = list.some(x => key(x) === key(item)); const next = exists ? list.filter(x => key(x) !== key(item)) : [{ ...item, at: new Date().toISOString() }, ...list]; localStorage.setItem(READING_BOOKMARK_KEY, JSON.stringify(next.slice(0,100))); renderReadingShelf(); showToast(exists ? 'Đã bỏ đánh dấu.' : 'Đã lưu vào sổ đọc.'); }
+  function renderReadingShelf() {
+    const render = (list, empty, key) => list.length ? list.map((item, i) => `<div class="reading-item"><div><strong>${escapeHTML(item.title || 'Truyện')}</strong><small>${escapeHTML(item.subtitle || '')}${item.at ? ' · ' + new Date(item.at).toLocaleDateString('vi-VN') : ''}</small></div><div class="reading-item-actions">${key === 'history' ? `<button class="mini-button" type="button" data-reading-resume="${item.type}" data-story-id="${escapeHTML(item.storyId || '')}" data-chapter-id="${escapeHTML(item.chapterId || '')}">Tiếp tục</button>` : ''}<button class="mini-button" type="button" data-reading-remove="${key}" data-reading-index="${i}">Bỏ</button></div></div>`).join('') : `<p class="muted">${empty}</p>`;
+    const history = readLocalList(READING_HISTORY_KEY), bookmarks = readLocalList(READING_BOOKMARK_KEY);
+    $('#reading-history')?.replaceChildren(); if ($('#reading-history')) $('#reading-history').innerHTML = render(history, 'Chưa có lịch sử đọc trên thiết bị này.', 'history');
+    if ($('#reading-bookmarks')) $('#reading-bookmarks').innerHTML = render(bookmarks, 'Bạn chưa lưu mục nào.', 'bookmarks');
+    $$('[data-reading-remove]').forEach(btn => btn.addEventListener('click', () => { const key = btn.dataset.readingRemove === 'history' ? READING_HISTORY_KEY : READING_BOOKMARK_KEY; const list = readLocalList(key); list.splice(Number(btn.dataset.readingIndex),1); localStorage.setItem(key, JSON.stringify(list)); renderReadingShelf(); }));
+    $$('[data-reading-resume]').forEach(btn => btn.addEventListener('click', () => { if (btn.dataset.readingResume === 'chapter' && btn.dataset.chapterId) openChapter(btn.dataset.chapterId); else if (btn.dataset.storyId) openStory(btn.dataset.storyId); }));
+  }
+  function changeReaderSize(delta) { const content = document.querySelector('.chapter-dialog .reader-content'); if (!content) return; const current = Number(localStorage.getItem('giay-muc-tho-reader-size') || 17); const next = Math.max(14, Math.min(26, current + delta)); localStorage.setItem('giay-muc-tho-reader-size', String(next)); content.style.fontSize = `${next}px`; }
+  function applyReaderTheme(theme) { const allowed = ['paper','night','warm']; const selected = allowed.includes(theme) ? theme : 'paper'; document.documentElement.dataset.readerTheme = selected; localStorage.setItem('giay-muc-tho-reader-theme', selected); const button = $('#reader-theme'); if (button) button.textContent = selected === 'night' ? 'Giao diện: Tối' : selected === 'warm' ? 'Giao diện: Ấm' : 'Giao diện: Giấy'; }
+  $('#reader-theme')?.addEventListener('click', () => { const current = document.documentElement.dataset.readerTheme || 'paper'; applyReaderTheme(current === 'paper' ? 'night' : current === 'night' ? 'warm' : 'paper'); });
+  applyReaderTheme(localStorage.getItem('giay-muc-tho-reader-theme') || 'paper'); renderReadingShelf();
+
   function setupAdminTabs() {
     const nav = $('#admin-tabs'), host = $('#admin-tab-content');
     if (!nav || !host || host.dataset.ready) return;
@@ -560,10 +570,14 @@ function answerFromKnowledge(question) {
     const boxes = $$('.vip-admin-box');
     const groups = {
       library: [$('#poem-editor'), $('#admin-poem-list'), $('.story-admin-box')],
-      vip: [boxes[0]], views: [], notes: [$('.knowledge-box')], logs: [boxes[1]]
+      vip: [boxes[0]], members: [], views: [], notes: [$('.knowledge-box')], logs: [boxes[1]]
     };
     Object.entries(groups).forEach(([key, nodes]) => {
       const section = document.createElement('section'); section.className = 'admin-tab-panel'; section.dataset.adminPanel = key;
+      if (key === 'members') {
+        const card = document.createElement('div'); card.className = 'vip-admin-box';
+        card.innerHTML = '<div class="admin-heading"><div><p class="eyebrow">THÀNH VIÊN</p><h3>Danh sách thành viên đã tương tác VIP</h3></div><button type="button" class="button button-outline" id="refresh-members">Làm mới</button></div><p class="muted">Danh sách này gồm người đã gửi đơn VIP hoặc có bản ghi VIP. Không liệt kê mọi tài khoản Auth vì Supabase không cho frontend đọc toàn bộ người dùng.</p><div id="member-list" class="admin-list"><p class="muted">Đang tải...</p></div>'; section.append(card);
+      }
       if (key === 'views') {
         const card = document.createElement('div'); card.className = 'vip-admin-box';
         card.innerHTML = '<div class="admin-heading"><div><p class="eyebrow">THỐNG KÊ</p><h3>Lượt xem ghi nhận</h3></div><button type="button" class="button button-outline" id="refresh-views">Làm mới</button></div><p class="muted">Dựa trên sự kiện page_view đã ghi trong nhật ký, không phải số người dùng duy nhất.</p><div id="view-stats" class="view-stats"><p class="muted">Đang tổng hợp...</p></div>';
@@ -575,18 +589,39 @@ function answerFromKnowledge(question) {
       $$('.admin-tab-panel').forEach(el => el.hidden = el.dataset.adminPanel !== key);
       $$('#admin-tabs [data-admin-tab]').forEach(btn => { const on = btn.dataset.adminTab === key; btn.classList.toggle('active', on); btn.setAttribute('aria-selected', String(on)); });
       if (key === 'views') loadViewStats();
+      if (key === 'members') loadVipMembers();
     }
     nav.querySelectorAll('[data-admin-tab]').forEach(btn => btn.addEventListener('click', () => activate(btn.dataset.adminTab)));
-    $('#refresh-views')?.addEventListener('click', loadViewStats); activate('library');
+    $('#refresh-views')?.addEventListener('click', loadViewStats); $('#refresh-members')?.addEventListener('click', loadVipMembers); activate('library');
+  }
+  async function loadVipMembers() {
+    if (!db || !isAdmin) return; const host = $('#member-list'); if (!host) return;
+    host.innerHTML = '<p class="muted">Đang tải...</p>';
+    const [{ data: requests, error: requestError }, { data: members, error: memberError }] = await Promise.all([
+      db.from('vip_requests').select('user_id,email,status,created_at').order('created_at', { ascending: false }).limit(200),
+      db.from('vip_members').select('user_id,active').limit(200)
+    ]);
+    if (requestError && memberError) { host.innerHTML = `<p class="muted">Không tải được thành viên: ${escapeHTML(requestError.message || memberError.message)}</p>`; return; }
+    const active = new Set((members || []).filter(m => m.active).map(m => m.user_id));
+    const rows = new Map();
+    (requests || []).forEach(r => rows.set(r.user_id, { ...r, active: active.has(r.user_id) }));
+    (members || []).forEach(m => { const old = rows.get(m.user_id) || { user_id: m.user_id, email: 'Tài khoản chưa gửi đơn VIP', status: 'chưa gửi đơn', created_at: null }; rows.set(m.user_id, { ...old, active: !!m.active }); });
+    const list = [...rows.values()];
+    host.innerHTML = list.length ? list.map(r => `<div class="admin-row"><div><strong>${escapeHTML(r.email || 'Không có email')}</strong><small>ID: ${escapeHTML(r.user_id)}</small><small>Trạng thái VIP: ${r.active ? 'ĐANG HOẠT ĐỘNG' : escapeHTML(r.status || 'Chưa có VIP')} ${r.created_at ? ' · Đơn lúc ' + new Date(r.created_at).toLocaleString('vi-VN') : ''}</small></div><div class="admin-row-actions"><span class="status-pill ${r.active ? 'status-active' : ''}">${r.active ? 'VIP' : 'Thường / chờ duyệt'}</span></div></div>`).join('') : '<p class="muted">Chưa có thành viên nào gửi đơn VIP.</p>';
   }
   async function loadViewStats() {
     if (!db || !isAdmin) return; const host = $('#view-stats'); if (!host) return;
     host.innerHTML = '<p class="muted">Đang tải...</p>';
-    const { data, error } = await db.from('access_logs').select('event_type,created_at').order('created_at', { ascending: false }).limit(1000);
+    const { data, error } = await db.from('access_logs').select('page_path,event_type,created_at').order('created_at', { ascending: false }).limit(5000);
     if (error) { host.innerHTML = `<p class="muted">Không tải được thống kê: ${escapeHTML(error.message)}</p>`; return; }
-    const views = (data || []).filter(r => r.event_type === 'page_view'); const today = new Date(); today.setHours(0,0,0,0);
-    const todayViews = views.filter(r => new Date(r.created_at) >= today).length;
-    host.innerHTML = `<div class="view-stat-grid"><article><strong>${views.length}</strong><span>Lượt xem trong 1.000 sự kiện gần nhất</span></article><article><strong>${todayViews}</strong><span>Lượt xem hôm nay trong dữ liệu đã tải</span></article><article><strong>${new Set(views.map(r => new Date(r.created_at).toLocaleDateString('vi-VN'))).size}</strong><span>Ngày có lượt xem trong dữ liệu đã tải</span></article></div>`;
+    const rows = data || []; const views = rows.filter(r => ['page_view','story_open','chapter_open'].includes(r.event_type));
+    const todayKey = new Date().toLocaleDateString('en-CA');
+    const todayViews = views.filter(r => new Date(r.created_at).toLocaleDateString('en-CA') === todayKey).length;
+    const byStory = new Map(); const byDay = new Map();
+    views.forEach(r => { const path = r.page_path || '/'; const match = path.match(/^\/stories\/([^/]+)/); const key = match ? match[1] : (r.event_type === 'page_view' ? 'Trang chủ / trang khác' : path); byStory.set(key, (byStory.get(key)||0)+1); const day = new Date(r.created_at).toLocaleDateString('vi-VN'); byDay.set(day, (byDay.get(day)||0)+1); });
+    const storyRows = [...byStory.entries()].sort((a,b)=>b[1]-a[1]).slice(0,10).map(([name,count])=>`<div class="admin-row"><div><strong>${escapeHTML(name)}</strong><small>Lượt mở trang/truyện/chương đã ghi nhận</small></div><strong>${count}</strong></div>`).join('');
+    const dayRows = [...byDay.entries()].slice(0,14).map(([day,count])=>`<div class="admin-row"><div><strong>${escapeHTML(day)}</strong></div><strong>${count}</strong></div>`).join('');
+    host.innerHTML = `<div class="view-stat-grid"><article><strong>${views.length}</strong><span>Sự kiện xem trong 5.000 log gần nhất</span></article><article><strong>${todayViews}</strong><span>Sự kiện xem hôm nay trong dữ liệu đã tải</span></article><article><strong>${byStory.size}</strong><span>Trang/truyện có lượt xem</span></article></div><div class="view-detail-grid"><div><h4>Lượt xem theo truyện / trang</h4>${storyRows || '<p class="muted">Chưa có dữ liệu.</p>'}</div><div><h4>Lượt xem theo ngày</h4>${dayRows || '<p class="muted">Chưa có dữ liệu.</p>'}</div></div>`;
   }
   setupAdminTabs();
 
