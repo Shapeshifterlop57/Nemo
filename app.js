@@ -37,6 +37,39 @@
     return normalize(s).split(' ').filter(w => w.length > 2 && !stop.has(w));
   }
 
+  
+  async function logSiteEvent(pagePath = location.pathname) {
+    if (!db) return;
+
+    try {
+      const { data: { session: activeSession } } =
+        await db.auth.getSession();
+
+      const safePath = location.pathname + location.hash
+        .replace(/access_token=[^&]*/gi, '')
+        .replace(/refresh_token=[^&]*/gi, '')
+        .slice(0, 500);
+
+      await fetch('/api/visit', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(activeSession?.access_token
+            ? {
+                Authorization:
+                  `Bearer ${activeSession.access_token}`
+              }
+            : {})
+        },
+        body: JSON.stringify({
+          page_path: safePath || pagePath || '/'
+        })
+      });
+    } catch (error) {
+      console.error('Không ghi được lượt truy cập:', error);
+    }
+  }
+
   async function loadPoems() {
     if (!db) return;
     const { data, error } = await db.from('poems').select('id,title,category,content,notes,is_published,created_at,updated_at').order('created_at', { ascending: false });
