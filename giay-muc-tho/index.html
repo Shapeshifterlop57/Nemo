@@ -4,9 +4,9 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#f5f0e6">
-  <meta name="description" content="Miền Chữ là góc nhỏ để đọc, lưu giữ và sẻ chia những câu chữ.">
-  <title>Miền Chữ</title>
-  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2064%2064%22%3E%3Crect%20width%3D%2264%22%20height%3D%2264%22%20rx%3D%2214%22%20fill%3D%22%23f5f0e6%22%2F%3E%3Cg%20fill%3D%22none%22%20stroke%3D%22%2329251f%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20stroke-width%3D%223%22%3E%3Cpath%20d%3D%22M17%2045%2042%2015l8%207-25%2030-11%203z%22%2F%3E%3Cpath%20d%3D%22m37%2021%208%207M17%2045l8%207M13%2055l3-8%22%2F%3E%3Cpath%20d%3D%22M14%2013c5-4%2010-4%2014%200%22%2F%3E%3C%2Fg%3E%3Cpath%20d%3D%22m14%2055%2011-3-8-7z%22%20fill%3D%22%2329251f%22%2F%3E%3C%2Fsvg%3E">
+  <meta name="description" content="Gió là góc nhỏ để đọc, lưu giữ và sẻ chia thơ, truyện cùng những câu chữ.">
+  <title>Gió · Thơ và Truyện</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2064%2064%22%3E%3Crect%20width%3D%2264%22%20height%3D%2264%22%20rx%3D%2216%22%20fill%3D%22%23f5f0e6%22%2F%3E%3Cg%20fill%3D%22none%22%20stroke%3D%22%23414431%22%20stroke-width%3D%224%22%20stroke-linecap%3D%22round%22%3E%3Cpath%20d%3D%22M12%2024h28c9%200%209-12%201-12-4%200-6%202-7%205%22%2F%3E%3Cpath%20d%3D%22M8%2034h39c10%200%2010%2014%200%2014-4%200-7-3-7-6%22%2F%3E%3Cpath%20d%3D%22M14%2044h15%22%2F%3E%3C%2Fg%3E%3Cpath%20d%3D%22M48%208c-1%2010-7%2017-15%2020%200-10%205-17%2015-20Z%22%20fill%3D%22%23a35f47%22%2F%3E%3C%2Fsvg%3E">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -14,7 +14,7 @@
 </head>
 <body>
   <header class="site-header">
-    <a class="brand" href="#home" aria-label="Miền Chữ, về trang chủ"><span class="brand-mark">✳</span><span>miền chữ<span class="brand-dot">.</span></span></a>
+    <a class="brand" href="#home" aria-label="Gió, về trang chủ"><span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 48 48" role="img"><path d="M7 17h22c7 0 7-9 1-9-3 0-5 2-5 4M5 25h31c8 0 8 11 0 11-3 0-5-2-5-5M10 33h13" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/><path d="M40 7c-1 8-6 14-13 17 0-8 5-14 13-17Z" fill="#a35f47"/></svg></span><span>Gió<span class="brand-dot">.</span></span></a>
     <nav class="main-nav" aria-label="Điều hướng chính">
       <a href="#poems">Thư viện thơ</a><a href="#stories">Thư viện truyện</a><a href="#about">Đôi dòng</a><a href="#poem-ai">Trò chuyện</a>
     </nav>
@@ -56,7 +56,7 @@
           <label class="search-box"><span>⌕</span><input id="story-search" type="search" placeholder="Tìm truyện, nhân vật, chủ đề..." aria-label="Tìm truyện"></label>
           <select id="story-category" aria-label="Lọc truyện theo thể loại"><option value="">Tất cả thể loại</option></select>
         </div>
-        <div class="vip-public-cta"><p><strong>Thư viện truyện dành cho thành viên VIP.</strong> Đăng nhập để gửi yêu cầu, admin sẽ xét duyệt thủ công.</p><button id="vip-login-cta" class="button button-outline" type="button">Đăng nhập / đăng ký VIP ↗</button></div>
+        <div class="vip-public-cta"><p><strong>Thư viện truyện dành cho thành viên VIP.</strong> VIP hoàn toàn miễn phí. Đăng nhập, trả lời vài câu hỏi để gửi đơn; admin xét duyệt ngay trong mục “Duyệt VIP”, bạn không cần inbox riêng.</p><button id="vip-login-cta" class="button button-outline" type="button">Đăng nhập / đăng ký VIP ↗</button></div>
         <div id="story-list" class="poem-grid"><article class="poem-card placeholder-card"><p class="eyebrow">ĐANG MỞ SỔ...</p><h3>Những câu chuyện sẽ ở đây</h3><p>Kết nối Supabase và chạy bản cập nhật SQL để bật thư viện truyện.</p></article></div>
         <p id="story-count" class="poem-count">Đang tải thư viện truyện...</p>
       </div>
@@ -65,22 +65,27 @@
     <section id="reading-shelf" class="section reading-shelf"><div class="wrap"><div class="section-heading"><div><p class="eyebrow">SỔ ĐỌC CÁ NHÂN</p><h2>Đọc tiếp & <em>đã lưu.</em></h2></div><p class="section-aside">Lưu lại những câu chuyện muốn đọc,<br>và tiếp tục từ nơi đã dừng.</p></div><div class="reading-shelf-grid"><div><h3>Đọc gần đây</h3><div id="reading-history" class="reading-list"><p class="muted">Chưa có lịch sử đọc trên thiết bị này.</p></div></div><div><h3>Đã đánh dấu</h3><div id="reading-bookmarks" class="reading-list"><p class="muted">Bạn chưa lưu mục nào.</p></div></div></div><p class="muted">Sổ đọc được lưu trên trình duyệt hiện tại. Xóa dữ liệu trình duyệt có thể xóa sổ đọc.</p></div></section>
 
     <section id="about" class="section about-section">
-      <div class="wrap about-grid"><div class="about-symbol" aria-hidden="true"><span>“</span><div class="symbol-ring"></div><small>GHI CHÉP<br>VÀ LẶNG YÊN</small></div><div class="about-copy"><p class="eyebrow">ĐÔI DÒNG VỀ GÓC NHỎ</p><h2>Không cần thật nhiều lời.<br>Chỉ cần <em>đúng câu chữ.</em></h2><p>Đây là nơi lưu lại những bài thơ, câu chuyện và bản thảo của tôi. Có câu chữ đến từ một ngày nhiều nắng, có điều được viết ra trong những khoảng lặng không dễ gọi tên. Bạn có thể đọc, tìm kiếm và mang theo một đoạn mình thích.</p><p class="signature">— người viết, vẫn đang học cách gọi tên cảm xúc</p></div></div>
+      <div class="wrap about-grid"><div class="about-symbol" aria-hidden="true"><span>“</span><div class="symbol-ring"></div><small>GHI CHÉP<br>VÀ LẶNG YÊN</small></div><div class="about-copy"><p class="eyebrow">ĐÔI DÒNG VỀ GÓC NHỎ</p><h2>Không cần thật nhiều lời.<br>Chỉ cần <em>đúng câu chữ.</em></h2><p>Đây là nơi lưu lại những bài thơ, câu chuyện và bản thảo của tôi. Có câu chữ đến từ một ngày nhiều nắng, có điều được viết ra trong những khoảng lặng không dễ gọi tên. Bạn có thể đọc, tìm kiếm và mang theo một đoạn mình thích.</p><p class="signature">— người viết, vẫn đang học cách gọi tên cảm xúc</p>
+          <div class="team-links" aria-label="Những người xây dựng Gió">
+            <a class="team-link" href="https://www.facebook.com/tran.inh.phong.455771/" target="_blank" rel="noopener noreferrer"><span class="team-role">NGƯỜI SÁNG LẬP</span><strong>Trần Đình Phong</strong><span class="team-action">Facebook ↗</span></a>
+            <a class="team-link" href="https://www.facebook.com/profile.php?id=61565357915335" target="_blank" rel="noopener noreferrer"><span class="team-role">ĐỒNG SÁNG LẬP</span><strong>Người đồng hành cùng Gió</strong><span class="team-action">Facebook ↗</span></a>
+          </div></div></div>
     </section>
 
-    <section id="poem-ai" class="section ai-section"><div class="wrap ai-grid"><div class="ai-copy"><p class="eyebrow">MỘT NGƯỜI BẠN NHỎ</p><h2>Trò chuyện<br>cùng <em>thơ và truyện.</em></h2><p>Hỏi về thơ, tìm truyện hoặc yêu cầu đọc một chương đã xuất bản. Trợ lý tra cứu nội dung trong kho đã lưu, không gửi câu hỏi đến dịch vụ AI bên ngoài.</p><p class="ai-disclaimer">Đây là trợ lý tìm kiếm theo từ khóa và quy tắc, không phải mô hình AI ngôn ngữ có khả năng hiểu mọi câu hỏi.</p></div><div class="chat-panel"><div class="chat-head"><div class="chat-avatar">✳</div><div><strong>Người giữ trang chữ</strong><span><i></i> Đang ở đây, trong kho chữ</span></div><button id="clear-chat" class="icon-button" title="Xóa cuộc trò chuyện" aria-label="Xóa cuộc trò chuyện">↻</button></div><div id="chat-messages" class="chat-messages" aria-live="polite"><div class="chat-message bot-message">Xin chào. Bạn muốn tìm một bài thơ, một chủ đề, hay một câu chữ để bắt đầu? <div class="message-meta">NGƯỜI GIỮ TRANG THƠ</div></div></div><div class="suggestions"><button class="suggestion">Tìm thơ về nỗi nhớ</button><button class="suggestion">Có bài thơ nào về bình yên?</button><button class="suggestion">Tìm truyện về tình bạn</button><button class="suggestion">Đọc chương 1 truyện Mùa Hạ</button></div><form id="chat-form" class="chat-form"><input id="chat-input" autocomplete="off" maxlength="500" placeholder="Viết điều bạn đang tìm..." aria-label="Nhập câu hỏi"><button class="send-button" aria-label="Gửi câu hỏi">↑</button></form><p class="chat-footnote">Câu trả lời được tra cứu từ thơ, truyện và ghi chú được phép hiển thị.</p></div></div></section>
+    <section id="poem-ai" class="section ai-section"><div class="wrap ai-grid"><div class="ai-copy"><p class="eyebrow">MỘT NGƯỜI BẠN NHỎ</p><h2>Trò chuyện<br>cùng <em>thơ và truyện.</em></h2><p>Hỏi về thơ, tìm truyện hoặc yêu cầu đọc một chương đã xuất bản. Trợ lý tra cứu nội dung trong kho đã lưu, không gửi câu hỏi đến dịch vụ AI bên ngoài.</p><p class="ai-disclaimer">Đây là trợ lý tìm kiếm theo từ khóa và quy tắc, không phải mô hình AI ngôn ngữ có khả năng hiểu mọi câu hỏi.</p></div><div class="chat-panel"><div class="chat-head"><div class="chat-avatar">✳</div><div><strong>Người giữ trang Gió</strong><span><i></i> Đang ở đây, trong kho chữ</span></div><button id="clear-chat" class="icon-button" title="Xóa cuộc trò chuyện" aria-label="Xóa cuộc trò chuyện">↻</button></div><div id="chat-messages" class="chat-messages" aria-live="polite"><div class="chat-message bot-message">Xin chào. Bạn muốn tìm một bài thơ, một chủ đề, hay một câu chữ để bắt đầu? <div class="message-meta">NGƯỜI GIỮ TRANG GIÓ</div></div></div><div class="suggestions"><button class="suggestion">Tìm thơ về nỗi nhớ</button><button class="suggestion">Có bài thơ nào về bình yên?</button><button class="suggestion">Tìm truyện về tình bạn</button><button class="suggestion">Đọc chương 1 truyện Mùa Hạ</button></div><form id="chat-form" class="chat-form"><input id="chat-input" autocomplete="off" maxlength="500" placeholder="Viết điều bạn đang tìm..." aria-label="Nhập câu hỏi"><button class="send-button" aria-label="Gửi câu hỏi">↑</button></form><p class="chat-footnote">Câu trả lời được tra cứu từ thơ, truyện và ghi chú được phép hiển thị.</p></div></div></section>
 
     <section id="account-area" class="section account-section hidden"><div class="wrap"><div class="section-heading"><div><p class="eyebrow">GÓC RIÊNG</p><h2 id="account-title">Tài khoản của bạn.</h2></div><button id="sign-out" class="button button-outline">Đăng xuất</button></div><p id="account-message" class="muted"></p>
       <div id="vip-area" class="vip-box">
         <p class="eyebrow">THẺ THÀNH VIÊN</p><h3>Đăng ký đọc truyện VIP</h3>
+        <p class="vip-free-note"><strong>VIP hoàn toàn miễn phí.</strong> Đây là quyền đọc truyện sau khi đơn được xét duyệt, không thu phí và không cần inbox riêng cho admin.</p>
         <p id="vip-status" class="muted">Đang kiểm tra trạng thái thành viên...</p>
-        <form id="vip-request-form" class="editor-form">
-          <label>Liên hệ qua<select id="vip-contact-method"><option value="email">Gmail</option><option value="inbox">Inbox Facebook</option></select></label>
-          <label>Thông tin liên hệ<input id="vip-contact-detail" maxlength="200" placeholder="Gmail hoặc link/tên Facebook" required></label>
-          <label>Lời nhắn (không bắt buộc)<textarea id="vip-message" rows="3" maxlength="1000" placeholder="Bạn muốn gửi lời nhắn gì cho admin?"></textarea></label>
-          <button class="button button-dark" type="submit">Gửi đăng ký VIP</button><span id="vip-request-status" class="muted"></span>
+        <form id="vip-request-form" class="editor-form vip-application-form">
+          <label>Bạn biết đến Gió từ đâu?<input id="vip-discovery-source" maxlength="300" placeholder="Ví dụ: bạn bè, Facebook, trường học..." required></label>
+          <label>Tại sao bạn chọn đăng ký thành viên VIP?<textarea id="vip-reason" rows="4" maxlength="2000" placeholder="Hãy chia sẻ lý do của bạn..." required></textarea></label>
+          <label>Bạn có yêu văn thơ hoặc từng học/chuyên Văn không? Hãy kể cụ thể nhé.<textarea id="vip-literature-background" rows="4" maxlength="2000" placeholder="Bạn thích đọc/viết thể loại nào, có tham gia hoạt động văn học hay học chuyên Văn không..." required></textarea></label>
+          <button class="button button-dark" type="submit">Gửi đơn xét duyệt VIP miễn phí</button><span id="vip-request-status" class="muted" role="status"></span>
         </form>
-      </div><div id="admin-panel" class="admin-panel hidden"><div class="admin-heading"><div><p class="eyebrow">CHỈ DÀNH CHO QUẢN TRỊ VIÊN</p><h3>Quản lý thư viện</h3></div><button id="new-poem" class="button button-dark">＋ Viết bài mới</button></div><nav class="admin-tabs" id="admin-tabs" aria-label="Mục quản trị"><button type="button" class="active" data-admin-tab="library">Thơ & Truyện</button><button type="button" data-admin-tab="vip">Duyệt VIP</button><button type="button" data-admin-tab="members">Thành viên</button><button type="button" data-admin-tab="views">Lượt xem</button><button type="button" data-admin-tab="notes">Ghi chú</button><button type="button" data-admin-tab="logs">Nhật ký</button><button type="button" data-admin-tab="moderation">Tương tác</button></nav><div id="admin-tab-content"></div><form id="poem-editor" class="editor-form hidden"><input id="edit-id" type="hidden"><label>Tiêu đề<input id="edit-title" maxlength="160" required placeholder="Tên bài thơ"></label><div class="editor-two"><label>Chủ đề<input id="edit-category" maxlength="60" placeholder="Ví dụ: Nỗi nhớ"></label><label>Trạng thái<select id="edit-published"><option value="false">Bản nháp</option><option value="true">Xuất bản công khai</option></select></label></div><label>Nội dung thơ<textarea id="edit-content" rows="12" maxlength="20000" required placeholder="Viết thơ ở đây... Mỗi dòng sẽ được giữ nguyên."></textarea></label><label>Ghi chú / từ khóa cho trợ lý thơ<textarea id="edit-notes" rows="3" maxlength="4000" placeholder="Tùy chọn: bối cảnh, chủ đề, từ khóa để AI tìm đúng bài hơn."></textarea></label><div class="editor-actions"><button class="button button-dark" type="submit">Lưu bài thơ</button><button id="cancel-edit" class="button button-outline" type="button">Hủy</button><span id="editor-status" class="muted"></span></div></form><div id="admin-poem-list" class="admin-list"></div>
+      </div><div id="admin-panel" class="admin-panel hidden"><div class="admin-heading"><div><p class="eyebrow">KHU VỰC BIÊN TẬP</p><h3>Quản lý thư viện</h3></div><button id="new-poem" class="button button-dark">＋ Viết bài mới</button></div><nav class="admin-tabs" id="admin-tabs" aria-label="Mục quản trị"><button type="button" class="active" data-admin-tab="library">Thơ & Truyện</button><button type="button" data-admin-tab="vip">Duyệt VIP</button><button type="button" data-admin-tab="members">Thành viên</button><button type="button" data-admin-tab="views">Lượt xem</button><button type="button" data-admin-tab="notes">Ghi chú</button><button type="button" data-admin-tab="logs">Nhật ký</button><button type="button" data-admin-tab="moderation">Tương tác</button></nav><div id="admin-tab-content"></div><form id="poem-editor" class="editor-form hidden"><input id="edit-id" type="hidden"><label>Tiêu đề<input id="edit-title" maxlength="160" required placeholder="Tên bài thơ"></label><div class="editor-two"><label>Chủ đề<input id="edit-category" maxlength="60" placeholder="Ví dụ: Nỗi nhớ"></label><label>Trạng thái<select id="edit-published"><option value="false">Bản nháp</option><option value="true">Xuất bản công khai</option></select></label></div><label>Nội dung thơ<textarea id="edit-content" rows="12" maxlength="20000" required placeholder="Viết thơ ở đây... Mỗi dòng sẽ được giữ nguyên."></textarea></label><label>Ghi chú / từ khóa cho trợ lý thơ<textarea id="edit-notes" rows="3" maxlength="4000" placeholder="Tùy chọn: bối cảnh, chủ đề, từ khóa để AI tìm đúng bài hơn."></textarea></label><div class="editor-actions"><button class="button button-dark" type="submit">Lưu bài thơ</button><button id="cancel-edit" class="button button-outline" type="button">Hủy</button><span id="editor-status" class="muted"></span></div></form><div id="admin-poem-list" class="admin-list"></div>
           <div class="story-admin-box">
             <div class="admin-heading story-admin-heading"><div><p class="eyebrow">KHO TRUYỆN</p><h3>Quản lý truyện và chương</h3></div><button id="new-story" class="button button-dark" type="button">＋ Thêm truyện</button></div>
             <p class="muted">Mỗi truyện có thể gồm nhiều chương. Bản nháp chỉ tài khoản quản trị nhìn thấy.</p>
@@ -126,19 +131,20 @@
   <footer class="site-footer">
     <div class="wrap footer-inner">
   
-      <p>Đang web đang trong giai đoạn phát triển (Beta).</p>
-
-      <a class="facebook-link"
-         href="https://www.facebook.com/tran.inh.phong.455771/"
-         target="_blank"
-         rel="noopener noreferrer">
-        <svg viewBox="0 0 24 24" width="22" height="22"
-             fill="currentColor" aria-hidden="true">
-          <path d="M24 12a12 12 0 1 0-13.875 11.854v-8.386H7.078V12h3.047V9.356c0-3.007 1.792-4.668 4.533-4.668 1.312 0 2.686.234 2.686.234v2.953h-1.513c-1.49 0-1.956.925-1.956 1.874V12h3.328l-.532 3.468h-2.796v8.386A12.003 12.003 0 0 0 24 12z"/>
-        </svg>
-        <span>Trần Đình Phong</span>
-      </a>
-
+      <div class="footer-note">
+        <p>Gió đang trong giai đoạn chuẩn bị công bố.</p>
+        <small>Một góc nhỏ dành cho thơ, truyện và người yêu câu chữ.</small>
+      </div>
+      <div class="footer-team">
+        <a class="facebook-link" href="https://www.facebook.com/tran.inh.phong.455771/" target="_blank" rel="noopener noreferrer" aria-label="Facebook người sáng lập Gió">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true"><path d="M24 12a12 12 0 1 0-13.875 11.854v-8.386H7.078V12h3.047V9.356c0-3.007 1.792-4.668 4.533-4.668 1.312 0 2.686.234 2.686.234v2.953h-1.513c-1.49 0-1.956.925-1.956 1.874V12h3.328l-.532 3.468h-2.796v8.386A12.003 12.003 0 0 0 24 12z"/></svg>
+          <span>Người sáng lập · Trần Đình Phong</span>
+        </a>
+        <a class="facebook-link" href="https://www.facebook.com/profile.php?id=61565357915335" target="_blank" rel="noopener noreferrer" aria-label="Facebook người đồng sáng lập Gió">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true"><path d="M24 12a12 12 0 1 0-13.875 11.854v-8.386H7.078V12h3.047V9.356c0-3.007 1.792-4.668 4.533-4.668 1.312 0 2.686.234 2.686.234v2.953h-1.513c-1.49 0-1.956.925-1.956 1.874V12h3.328l-.532 3.468h-2.796v8.386A12.003 12.003 0 0 0 24 12z"/></svg>
+          <span>Đồng sáng lập Gió · Facebook</span>
+        </a>
+      </div>
       <a href="#home" class="back-top">LÊN ĐẦU TRANG ↑</a>
     </div>
   </footer>
