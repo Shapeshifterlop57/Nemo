@@ -420,13 +420,69 @@ async function logSiteEvent(eventType = 'page_view', pagePath = null) {
     if (error) { showToast('Không thể cập nhật VIP: ' + error.message); return; }
     showToast(approve ? 'Đã duyệt thành viên VIP.' : 'Đã từ chối đơn VIP.'); await loadVipRequests();
   }
-  async function loadAccessLogs() {
-    if (!db || !isAdmin) return;
-    const host = $('#access-log-list'); host.innerHTML = '<p class="muted">Đang tải...</p>';
-    const { data, error } = await db.from('access_logs').select('id,email,page_path,event_type,created_at').order('created_at', { ascending: false }).limit(100);
-    if (error) { host.innerHTML = `<p class="muted">Không tải được nhật ký: ${escapeHTML(error.message)}</p>`; return; }
-    host.innerHTML = data?.length ? data.map(r => `<div class="admin-row"><div><strong>${escapeHTML(r.email || 'Khách chưa đăng nhập')} · ${escapeHTML(r.event_type)}</strong><small>${escapeHTML(r.page_path)} · ${new Date(r.created_at).toLocaleString('vi-VN')}</small></div></div>`).join('') : '<p class="muted">Chưa có nhật ký. Các lượt truy cập mới sẽ được ghi nhận sau khi chạy SQL.</p>';
+
+async function loadAccessLogs() {
+  if (!db || !isAdmin) return;
+
+  const host = $('#access-log-list');
+  host.innerHTML = '<p class="muted">Đang tải...</p>';
+
+  const { data, error } = await db
+    .from('access_logs')
+    .select(`
+      id,
+      email,
+      page_path,
+      event_type,
+      created_at,
+      ip_address,
+      country_name,
+      region_name,
+      city_name,
+      district_name
+    `)
+    .order('created_at', { ascending: false })
+    .limit(100);
+
+  if (error) {
+    host.innerHTML =
+      `<p class="muted">Không tải được nhật ký: ${escapeHTML(error.message)}</p>`;
+    return;
   }
+
+  host.innerHTML = data?.length
+    ? data.map(r => {
+        const location = [
+          r.district_name,
+          r.city_name,
+          r.region_name,
+          r.country_name
+        ].filter(Boolean).filter((v, i, a) => a.indexOf(v) === i).join(', ');
+
+        return `
+          <div class="admin-row">
+            <div>
+              <strong>
+                ${escapeHTML(r.email || 'Khách chưa đăng nhập')}
+                · ${escapeHTML(r.event_type || '')}
+              </strong>
+              <small>
+                Trang: ${escapeHTML(r.page_path || '/')}
+                · ${new Date(r.created_at).toLocaleString('vi-VN')}
+              </small>
+              <small>
+                IP: ${escapeHTML(r.ip_address || 'Chưa có dữ liệu')}
+              </small>
+              <small>
+                Vị trí: ${escapeHTML(location || 'Chưa xác định')}
+              </small>
+            </div>
+          </div>
+        `;
+      }).join('')
+    : '<p class="muted">Chưa có nhật ký truy cập.</p>';
+}
+
   $('#vip-request-form').addEventListener('submit', async e => {
     e.preventDefault();
     if (!db || !currentUser) { showToast('Hãy đăng nhập trước.'); return; }
