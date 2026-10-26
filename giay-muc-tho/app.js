@@ -378,10 +378,31 @@
     await loadStories();
   }
 
-  async function logSiteEvent(eventType = 'page_view', pagePath = null) {
-    if (!db) return;
-    try { await db.rpc('log_site_event', { p_page_path: pagePath || (location.pathname + location.hash), p_event_type: eventType }); } catch (_) { /* logging should not interrupt reading */ }
+
+async function logSiteEvent(eventType = 'page_view', pagePath = null) {
+  try {
+    if (eventType !== 'page_view') {
+      if (db) {
+        await db.rpc('log_site_event', {
+          p_page_path: pagePath || (location.pathname + location.hash),
+          p_event_type: eventType
+        });
+      }
+      return;
+    }
+
+    await fetch('/api/visit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        page_path: pagePath || (location.pathname + location.hash)
+      })
+    });
+  } catch (_) {
+    // Logging should not interrupt reading
   }
+}
+
 
   async function loadVipRequests() {
     if (!db || !isAdmin) return;
