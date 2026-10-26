@@ -379,29 +379,43 @@
   }
 
 
-async function logSiteEvent(eventType = 'page_view', pagePath = null) {
+
+async function logSiteEvent(pagePath = location.pathname) {
+  if (!db) return;
+
   try {
-    if (eventType !== 'page_view') {
-      if (db) {
-        await db.rpc('log_site_event', {
-          p_page_path: pagePath || (location.pathname + location.hash),
-          p_event_type: eventType
-        });
-      }
+    const { data, error } = await db.auth.getSession();
+
+    if (error) {
+      console.error("[GIO AUTH] Không lấy được session:", error);
       return;
     }
 
-    await fetch('/api/visit', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+    const token = data?.session?.access_token;
+
+    console.log("[GIO VISIT] Có token:", !!token);
+
+    const response = await fetch("/api/visit", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {})
+      },
       body: JSON.stringify({
-        page_path: pagePath || (location.pathname + location.hash)
+        page_path: location.pathname || pagePath || "/"
       })
     });
-  } catch (_) {
-    // Logging should not interrupt reading
+
+    console.log("[GIO VISIT] HTTP:", response.status);
+
+    if (!response.ok) {
+      console.error("[GIO VISIT] Lỗi:", await response.text());
+    }
+  } catch (error) {
+    console.error("[GIO VISIT] Lỗi gửi lượt truy cập:", error);
   }
 }
+
 
 
   async function loadVipRequests() {
