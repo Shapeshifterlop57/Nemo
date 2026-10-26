@@ -45,10 +45,7 @@
       const { data: { session: activeSession } } =
         await db.auth.getSession();
 
-      const safePath = location.pathname + location.hash
-        .replace(/access_token=[^&]*/gi, '')
-        .replace(/refresh_token=[^&]*/gi, '')
-        .slice(0, 500);
+const safePath = location.pathname.slice(0, 500);
 
       await fetch('/api/visit', {
         method: 'POST',
@@ -121,7 +118,13 @@
   async function updateAccount() {
     if (!db) return;
     const { data: { session: activeSession } } = await db.auth.getSession();
-    session = activeSession; currentUser = session?.user || null; isAdmin = false;
+    session = activeSession;
+    console.log('[GIO AUTH]', {
+  hasSession: !!session,
+  userId: session?.user?.id,
+  email: session?.user?.email
+});
+    currentUser = session?.user || null; isAdmin = false;
     if (currentUser) {
       const { data: roleRow, error } = await db.from('user_roles').select('role').eq('user_id', currentUser.id).maybeSingle();
       if (!error && roleRow?.role === 'admin') isAdmin = true;
@@ -356,8 +359,33 @@ const meaningIntent =
   $('#menu-toggle').addEventListener('click', () => $('.main-nav').classList.toggle('open'));
   $$('.main-nav a').forEach(a => a.addEventListener('click', () => $('.main-nav').classList.remove('open')));
 
+  
   if (db) {
-    db.auth.onAuthStateChange((_event, _session) => { setTimeout(async () => { await updateAccount(); await loadPoems(); }, 0); });
-    (async () => { await updateAccount(); await loadPoems(); if (isAdmin) await loadKnowledge(); })();
+    db.auth.onAuthStateChange((event) => {
+      setTimeout(async () => {
+        await updateAccount();
+        await loadPoems();
+
+        if (isAdmin) await loadKnowledge();
+
+        if (
+          event === 'SIGNED_IN' ||
+          event === 'SIGNED_OUT' ||
+          event === 'TOKEN_REFRESHED'
+        ) {
+          await logSiteEvent();
+        }
+      }, 0);
+    });
+
+    (async () => {
+      await updateAccount();
+      await loadPoems();
+
+      if (isAdmin) await loadKnowledge();
+
+      await logSiteEvent();
+    })();
   }
 })();
+
