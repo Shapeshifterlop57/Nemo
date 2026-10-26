@@ -3,7 +3,7 @@
   const $$ = (s) => [...document.querySelectorAll(s)];
   const config = window.SITE_CONFIG || {};
   const configured = config.SUPABASE_URL && config.SUPABASE_PUBLISHABLE_KEY && !config.SUPABASE_URL.includes('PASTE_') && !config.SUPABASE_PUBLISHABLE_KEY.includes('PASTE_');
-  let db = null, session = null, currentUser = null, isAdmin = false, poems = [], knowledge = [], stories = [], storyChapters = [], selectedStoryId = null, vipActive = false, vipRequest = null, authMode = 'login', toastTimer = null;
+  let db = null, session = null, currentUser = null, isAdmin = false, isCollaborator = false, canEditContent = false, poems = [], knowledge = [], stories = [], storyChapters = [], selectedStoryId = null, vipActive = false, vipRequest = null, authMode = 'login', toastTimer = null;
 
   if (configured && window.supabase?.createClient) {
     db = window.supabase.createClient(config.SUPABASE_URL, config.SUPABASE_PUBLISHABLE_KEY, {
@@ -43,11 +43,11 @@
     if (error) { console.error(error); $('#poem-list').innerHTML = '<div class="empty-state">Chưa tải được thư viện. Hãy kiểm tra SQL và chính sách quyền truy cập Supabase.</div>'; $('#poem-count').textContent = 'LỖI TẢI THƯ VIỆN'; return; }
     poems = data || [];
     renderPoems();
-    if (isAdmin) renderAdminPoems();
+    if (canEditContent) renderAdminPoems();
     const sharedPoemId = new URLSearchParams(window.location.search).get('poem');
     if (sharedPoemId && !window.__mienChuSharedPoemOpened) {
       const sharedPoem = poems.find(p => p.id === sharedPoemId);
-      if (sharedPoem && (isAdmin || sharedPoem.is_published)) {
+      if (sharedPoem && (canEditContent || sharedPoem.is_published)) {
         window.__mienChuSharedPoemOpened = true;
         openPoem(sharedPoemId);
       }
@@ -76,15 +76,15 @@
     }
     storyChapters = chapterData || [];
     renderStories();
-    if (isAdmin) renderAdminStories();
+    if (canEditContent) renderAdminStories();
     const sharedChapterId = new URLSearchParams(window.location.search).get('chapter');
     const sharedStoryId = new URLSearchParams(window.location.search).get('story');
     if (sharedChapterId && !window.__mienChuSharedRouteOpened) {
       const sharedChapter = storyChapters.find(ch => ch.id === sharedChapterId);
-      if (sharedChapter && (isAdmin || sharedChapter.is_published)) { window.__mienChuSharedRouteOpened = true; openChapter(sharedChapterId); }
+      if (sharedChapter && (canEditContent || sharedChapter.is_published)) { window.__mienChuSharedRouteOpened = true; openChapter(sharedChapterId); }
     } else if (sharedStoryId && !window.__mienChuSharedRouteOpened) {
       const sharedStory = stories.find(st => st.id === sharedStoryId);
-      if (sharedStory && (isAdmin || sharedStory.is_published)) { window.__mienChuSharedRouteOpened = true; openStory(sharedStoryId); }
+      if (sharedStory && (canEditContent || sharedStory.is_published)) { window.__mienChuSharedRouteOpened = true; openStory(sharedStoryId); }
     }
   }
 
@@ -93,18 +93,18 @@
     const { data, error } = await db.from('knowledge_notes').select('id,title,content,is_published,created_at').order('created_at', { ascending: false });
     if (error) { console.error(error); return; }
     knowledge = data || [];
-    if (isAdmin) renderKnowledge();
+    if (canEditContent) renderKnowledge();
   }
   function renderPoems() {
     const search = normalize($('#poem-search').value), category = $('#poem-category').value;
-    const publicPoems = poems.filter(p => isAdmin || p.is_published);
+    const publicPoems = poems.filter(p => canEditContent || p.is_published);
     const filtered = publicPoems.filter(p => (!category || p.category === category) && (!search || normalize([p.title,p.category,p.content,p.notes].join(' ')).includes(search)));
     const categories = [...new Set(publicPoems.map(p => p.category).filter(Boolean))].sort((a,b) => a.localeCompare(b, 'vi'));
     const select = $('#poem-category'), old = select.value;
     select.innerHTML = '<option value="">Tất cả chủ đề</option>' + categories.map(c => `<option value="${escapeHTML(c)}">${escapeHTML(c)}</option>`).join('');
     if (categories.includes(old)) select.value = old;
     if (!filtered.length) {
-      $('#poem-list').innerHTML = `<div class="empty-state">${publicPoems.length ? 'Chưa tìm thấy bài thơ phù hợp. Thử từ khóa khác nhé.' : (isAdmin ? 'Thư viện còn trống. Hãy dùng bảng quản trị để viết bài đầu tiên.' : 'Những bài thơ sẽ xuất hiện ở đây khi tác giả xuất bản.')}</div>`;
+      $('#poem-list').innerHTML = `<div class="empty-state">${publicPoems.length ? 'Chưa tìm thấy bài thơ phù hợp. Thử từ khóa khác nhé.' : (canEditContent ? 'Thư viện còn trống. Hãy dùng bảng quản trị để viết bài đầu tiên.' : 'Những bài thơ sẽ xuất hiện ở đây khi tác giả xuất bản.')}</div>`;
     } else {
       $('#poem-list').innerHTML = filtered.map(p => `<article class="poem-card" tabindex="0" role="button" data-poem-id="${p.id}" aria-label="Đọc bài thơ ${escapeHTML(p.title)}"><p class="eyebrow">${escapeHTML(p.category || 'THƠ TỰ DO')}${!p.is_published ? ' · BẢN NHÁP RIÊNG' : ''}</p><h3>${escapeHTML(p.title)}</h3><p class="poem-excerpt">${escapeHTML(p.content)}</p><div class="poem-card-foot"><span>${formatDate(p.created_at)}</span><span>ĐỌC BÀI ↗</span></div></article>`).join('');
       $$('#poem-list [data-poem-id]').forEach(card => {
@@ -116,7 +116,7 @@
   }
   function renderStories() {
     const search = normalize($('#story-search').value), category = $('#story-category').value;
-    const visibleStories = stories.filter(s => isAdmin || s.is_published);
+    const visibleStories = stories.filter(s => canEditContent || s.is_published);
     const filtered = visibleStories.filter(s =>
       (!category || s.category === category) &&
       (!search || normalize([s.title, s.category, s.synopsis].join(' ')).includes(search))
@@ -126,10 +126,10 @@
     select.innerHTML = '<option value="">Tất cả thể loại</option>' + categories.map(c => `<option value="${escapeHTML(c)}">${escapeHTML(c)}</option>`).join('');
     if (categories.includes(old)) select.value = old;
     if (!filtered.length) {
-      $('#story-list').innerHTML = `<div class="empty-state">${visibleStories.length ? 'Chưa tìm thấy truyện phù hợp. Thử từ khóa khác nhé.' : (isAdmin ? 'Kho truyện còn trống. Hãy thêm truyện trong khu vực quản trị.' : 'Truyện sẽ xuất hiện ở đây khi được xuất bản.')}</div>`;
+      $('#story-list').innerHTML = `<div class="empty-state">${visibleStories.length ? 'Chưa tìm thấy truyện phù hợp. Thử từ khóa khác nhé.' : (canEditContent ? 'Kho truyện còn trống. Hãy thêm truyện trong khu vực quản trị.' : 'Truyện sẽ xuất hiện ở đây khi được xuất bản.')}</div>`;
     } else {
       $('#story-list').innerHTML = filtered.map(s => {
-        const chapterCount = storyChapters.filter(ch => ch.story_id === s.id && (isAdmin || ch.is_published)).length;
+        const chapterCount = storyChapters.filter(ch => ch.story_id === s.id && (canEditContent || ch.is_published)).length;
         return `<article class="poem-card story-card" tabindex="0" role="button" data-story-id="${s.id}" aria-label="Mở truyện ${escapeHTML(s.title)}"><p class="eyebrow">${escapeHTML(s.category || 'TRUYỆN')}${!s.is_published ? ' · BẢN NHÁP RIÊNG' : ''}</p><h3>${escapeHTML(s.title)}</h3><p class="story-synopsis">${escapeHTML(s.synopsis || 'Chưa có phần giới thiệu cho truyện này.')}</p><div class="poem-card-foot"><span class="story-chapter-count">${chapterCount} chương${!s.is_published ? ' · BẢN NHÁP' : ''}</span><span>ĐỌC TRUYỆN ↗</span></div></article>`;
       }).join('');
       $$('#story-list [data-story-id]').forEach(card => {
@@ -148,7 +148,7 @@
     if (storyId) url.searchParams.set('story', storyId);
     if (chapterId) url.searchParams.set('chapter', chapterId);
     if (poemId) url.searchParams.set('poem', poemId);
-    const shareData = { title: `${title} · Miền Chữ`, text: description || `Đọc “${title}” trên Miền Chữ.`, url: url.href };
+    const shareData = { title: `${title} · Gió`, text: description || `Đọc “${title}” trên Gió.`, url: url.href };
     try {
       if (navigator.share) {
         await navigator.share(shareData);
@@ -165,11 +165,11 @@
 
   async function openStory(id) {
     const story = stories.find(s => s.id === id);
-    if (!story || (!story.is_published && !isAdmin)) return;
-    if (!isAdmin && !vipActive) { showToast('Truyện dành cho thành viên VIP đã được duyệt. Hãy đăng nhập và đăng ký VIP nhé.'); $('#vip-area')?.scrollIntoView({ behavior: 'smooth', block: 'center' }); return; }
+    if (!story || (!story.is_published && !canEditContent)) return;
+    if (!canEditContent && !vipActive) { showToast('Truyện dành cho thành viên VIP đã được duyệt. Hãy đăng nhập và đăng ký VIP nhé.'); $('#vip-area')?.scrollIntoView({ behavior: 'smooth', block: 'center' }); return; }
     await logSiteEvent('story_open', `/stories/${story.id}`);
     saveReadingHistory({ type: 'story', storyId: story.id, title: story.title, subtitle: story.category || 'Truyện', at: new Date().toISOString() });
-    const chapters = storyChapters.filter(ch => ch.story_id === id && (isAdmin || (story.is_published && ch.is_published)))
+    const chapters = storyChapters.filter(ch => ch.story_id === id && (canEditContent || (story.is_published && ch.is_published)))
       .sort((a, b) => a.chapter_number - b.chapter_number);
     const chapterHtml = chapters.length
       ? chapters.map(ch => `<button class="chapter-link" type="button" data-open-chapter="${ch.id}"><span>CHƯƠNG ${ch.chapter_number}${!ch.is_published ? ' · NHÁP' : ''}</span><strong>${escapeHTML(ch.title)}</strong></button>`).join('')
@@ -196,8 +196,8 @@
     const chapter = storyChapters.find(ch => ch.id === id);
     if (!chapter) return;
     const story = stories.find(s => s.id === chapter.story_id);
-    if (!story || ((!story.is_published || !chapter.is_published) && !isAdmin)) return;
-    if (!isAdmin && !vipActive) { showToast('Chỉ thành viên VIP đã được duyệt mới đọc chương truyện.'); $('#vip-area')?.scrollIntoView({ behavior: 'smooth', block: 'center' }); return; }
+    if (!story || ((!story.is_published || !chapter.is_published) && !canEditContent)) return;
+    if (!canEditContent && !vipActive) { showToast('Chỉ thành viên VIP đã được duyệt mới đọc chương truyện.'); $('#vip-area')?.scrollIntoView({ behavior: 'smooth', block: 'center' }); return; }
     await logSiteEvent('chapter_open', `/stories/${story.id}/chapters/${chapter.id}`);
     saveReadingHistory({ type: 'chapter', storyId: story.id, chapterId: chapter.id, title: story.title, subtitle: `Chương ${chapter.chapter_number}: ${chapter.title}`, at: new Date().toISOString() });
     const dlg = document.createElement('dialog');
@@ -332,40 +332,49 @@
     authMode = mode;
     $('#tab-login').classList.toggle('active', mode === 'login'); $('#tab-signup').classList.toggle('active', mode === 'signup');
     $('#auth-title').textContent = mode === 'login' ? 'Chào bạn.' : 'Mở một góc nhỏ.';
-    $('#auth-description').textContent = mode === 'login' ? 'Đăng nhập để tiếp tục.' : 'Tạo tài khoản khách để đăng nhập vào trang thơ.';
+    $('#auth-description').textContent = mode === 'login' ? 'Đăng nhập để tiếp tục.' : 'Tạo tài khoản khách để đăng nhập vào Gió.';
     $('#auth-submit').textContent = mode === 'login' ? 'Đăng nhập' : 'Tạo tài khoản';
     $('#auth-password').autocomplete = mode === 'login' ? 'current-password' : 'new-password'; setStatus('#auth-status','');
   }
   async function updateAccount() {
     if (!db) return;
     const { data: { session: activeSession } } = await db.auth.getSession();
-    session = activeSession; currentUser = session?.user || null; isAdmin = false;
+    session = activeSession; currentUser = session?.user || null; isAdmin = false; isCollaborator = false; canEditContent = false;
     if (currentUser) {
       const { data: roleRow, error } = await db.from('user_roles').select('role').eq('user_id', currentUser.id).maybeSingle();
-      if (!error && roleRow?.role === 'admin') isAdmin = true;
+      if (!error) {
+        isAdmin = roleRow?.role === 'admin';
+        isCollaborator = roleRow?.role === 'collaborator';
+        canEditContent = isAdmin || isCollaborator;
+      }
     }
+    syncRoleUI();
     vipActive = false; vipRequest = null;
     if (currentUser && db) {
       const { data: member } = await db.from('vip_members').select('active').eq('user_id', currentUser.id).maybeSingle();
       vipActive = !!member?.active || isAdmin;
-      const { data: request } = await db.from('vip_requests').select('id,status,contact_method,contact_detail,message,created_at').eq('user_id', currentUser.id).maybeSingle();
+      const { data: request } = await db.from('vip_requests').select('id,status,discovery_source,vip_reason,literature_background,created_at').eq('user_id', currentUser.id).maybeSingle();
       vipRequest = request || null;
     }
-    $('#auth-open').textContent = currentUser ? (isAdmin ? 'Quản trị' : 'Tài khoản') : 'Đăng nhập';
+    $('#auth-open').textContent = currentUser ? (isAdmin ? 'Quản trị' : (isCollaborator ? 'Cộng tác viên' : 'Tài khoản')) : 'Đăng nhập';
     $('#account-area').classList.toggle('hidden', !currentUser);
-    $('#admin-panel').classList.toggle('hidden', !isAdmin);
+    $('#admin-panel').classList.toggle('hidden', !canEditContent);
     if (currentUser) {
-      $('#account-title').textContent = isAdmin ? 'Góc quản trị.' : 'Góc tài khoản.';
-      $('#account-message').textContent = `${currentUser.email || 'Tài khoản khách'} · ${isAdmin ? 'Quản trị viên' : (vipActive ? 'Thành viên VIP' : 'Tài khoản khách')}`;
-      $('#vip-status').textContent = isAdmin ? 'Admin có quyền đọc mọi truyện.' : vipActive ? 'VIP đã được duyệt. Bạn có thể đọc các chương đã xuất bản.' : vipRequest?.status === 'pending' ? 'Đơn của bạn đang chờ admin xét duyệt.' : vipRequest?.status === 'rejected' ? 'Đơn trước chưa được duyệt. Bạn có thể liên hệ admin để trao đổi.' : 'Bạn chưa có quyền VIP. Gửi đăng ký bên dưới để admin xem xét.';
-      $('#vip-request-form').classList.toggle('hidden', isAdmin || vipActive || vipRequest?.status === 'pending');
-      if (vipRequest) { $('#vip-contact-method').value = vipRequest.contact_method || 'email'; $('#vip-contact-detail').value = vipRequest.contact_detail || ''; $('#vip-message').value = vipRequest.message || ''; }
+      $('#account-title').textContent = isAdmin ? 'Góc quản trị.' : (isCollaborator ? 'Góc cộng tác viên.' : 'Góc tài khoản.');
+      $('#account-message').textContent = `${currentUser.email || 'Tài khoản khách'} · ${isAdmin ? 'Quản trị viên' : (isCollaborator ? 'Cộng tác viên biên tập thơ, truyện và kho kiến thức' : (vipActive ? 'Thành viên VIP' : 'Tài khoản khách'))}`;
+      $('#vip-status').textContent = canEditContent ? 'Tài khoản biên tập có thể xem bản thảo để làm việc.' : vipActive ? 'VIP đã được duyệt. Bạn có thể đọc các chương đã xuất bản.' : vipRequest?.status === 'pending' ? 'Đơn của bạn đang chờ admin xét duyệt trong mục “Duyệt VIP”.' : vipRequest?.status === 'approved' ? 'Đơn đã được duyệt. Nếu quyền đọc chưa hoạt động, hãy báo admin kiểm tra quyền thành viên.' : vipRequest?.status === 'rejected' ? 'Đơn trước chưa được duyệt. Bạn có thể gửi lại sau khi chỉnh sửa câu trả lời.' : 'VIP hoàn toàn miễn phí. Hãy trả lời các câu hỏi bên dưới để gửi đơn xét duyệt.';
+      $('#vip-request-form').classList.toggle('hidden', canEditContent || vipActive || ['pending', 'approved'].includes(vipRequest?.status));
+      if (vipRequest) {
+        $('#vip-discovery-source').value = vipRequest.discovery_source || '';
+        $('#vip-reason').value = vipRequest.vip_reason || '';
+        $('#vip-literature-background').value = vipRequest.literature_background || '';
+      }
     } else {
-      $('#vip-status').textContent = 'Đăng nhập hoặc tạo tài khoản trước khi đăng ký VIP.';
+      $('#vip-status').textContent = 'Đăng nhập hoặc tạo tài khoản trước khi đăng ký VIP miễn phí.';
       $('#vip-request-form').classList.add('hidden');
     }
     renderPoems();
-    if (isAdmin) { await loadPoems(); await loadKnowledge(); }
+    if (canEditContent) { await loadPoems(); await loadKnowledge(); }
     await loadStories();
   }
 
@@ -377,9 +386,9 @@
   async function loadVipRequests() {
     if (!db || !isAdmin) return;
     const host = $('#vip-request-list'); host.innerHTML = '<p class="muted">Đang tải...</p>';
-    const { data, error } = await db.from('vip_requests').select('id,user_id,email,contact_method,contact_detail,message,status,created_at').order('created_at', { ascending: false }).limit(100);
+    const { data, error } = await db.from('vip_requests').select('id,user_id,email,discovery_source,vip_reason,literature_background,status,created_at').order('created_at', { ascending: false }).limit(100);
     if (error) { host.innerHTML = `<p class="muted">Không tải được đơn VIP: ${escapeHTML(error.message)}</p>`; return; }
-    host.innerHTML = data?.length ? data.map(r => `<div class="admin-row"><div><strong>${escapeHTML(r.email)}</strong><small>${escapeHTML(r.contact_method === 'inbox' ? 'Inbox Facebook' : 'Gmail')}: ${escapeHTML(r.contact_detail || 'Chưa cung cấp')} · ${escapeHTML(r.message || 'Không có lời nhắn')} · ${new Date(r.created_at).toLocaleString('vi-VN')}</small><small>Trạng thái: ${escapeHTML(r.status)}</small></div><div class="admin-row-actions">${r.status === 'pending' ? `<button class="mini-button" data-vip-approve="${r.id}">Đồng ý</button><button class="mini-button danger" data-vip-reject="${r.id}">Từ chối</button>` : r.status === 'approved' ? `<button class="mini-button danger" data-vip-kick="${r.id}" title="Thu hồi quyền VIP, không khóa tài khoản">Thu hồi VIP</button>` : ''}</div></div>`).join('') : '<p class="muted">Chưa có đơn đăng ký VIP.</p>';
+    host.innerHTML = data?.length ? data.map(r => `<div class="admin-row vip-review-row"><div><strong>${escapeHTML(r.email || 'Tài khoản không có email')}</strong><small>Trạng thái: ${escapeHTML(r.status)} · Gửi lúc ${new Date(r.created_at).toLocaleString('vi-VN')}</small><div class="vip-answer"><b>Biết đến Gió từ đâu?</b><p>${escapeHTML(r.discovery_source || 'Đơn cũ chưa có câu trả lời')}</p></div><div class="vip-answer"><b>Lý do đăng ký VIP</b><p>${escapeHTML(r.vip_reason || 'Đơn cũ chưa có câu trả lời')}</p></div><div class="vip-answer"><b>Mức độ yêu thích văn thơ / kinh nghiệm học Văn</b><p>${escapeHTML(r.literature_background || 'Đơn cũ chưa có câu trả lời')}</p></div></div><div class="admin-row-actions">${r.status === 'pending' ? `<button class="mini-button" data-vip-approve="${r.id}">Duyệt VIP</button><button class="mini-button danger" data-vip-reject="${r.id}">Từ chối</button>` : r.status === 'approved' ? `<button class="mini-button danger" data-vip-kick="${r.id}" title="Thu hồi quyền VIP, không khóa tài khoản">Thu hồi VIP</button>` : ''}</div></div>`).join('') : '<p class="muted">Chưa có đơn đăng ký VIP.</p>';
     $$('[data-vip-approve]').forEach(b => b.addEventListener('click', () => reviewVip(b.dataset.vipApprove, true)));
     $$('[data-vip-reject]').forEach(b => b.addEventListener('click', () => reviewVip(b.dataset.vipReject, false)));
     $$('[data-vip-kick]').forEach(b => b.addEventListener('click', () => { if (confirm('Thu hồi quyền VIP của tài khoản này? Tài khoản vẫn đăng nhập được.')) reviewVip(b.dataset.vipKick, false); }));
@@ -398,19 +407,44 @@
     host.innerHTML = data?.length ? data.map(r => `<div class="admin-row"><div><strong>${escapeHTML(r.email || 'Khách chưa đăng nhập')} · ${escapeHTML(r.event_type)}</strong><small>${escapeHTML(r.page_path)} · ${new Date(r.created_at).toLocaleString('vi-VN')}</small></div></div>`).join('') : '<p class="muted">Chưa có nhật ký. Các lượt truy cập mới sẽ được ghi nhận sau khi chạy SQL.</p>';
   }
   $('#vip-request-form').addEventListener('submit', async e => {
-    e.preventDefault(); if (!db || !currentUser) { showToast('Hãy đăng nhập trước.'); return; }
-    const detail = $('#vip-contact-detail').value.trim(); if (!detail) return;
-    setStatus('#vip-request-status', 'Đang gửi đăng ký...');
-    const row = { user_id: currentUser.id, email: currentUser.email || $('#auth-email').value.trim(), contact_method: $('#vip-contact-method').value, contact_detail: detail, message: $('#vip-message').value.trim(), status: 'pending' };
-    const { error } = await db
-      .from('vip_requests')
-      .upsert({
-        ...row,
-        reviewed_by: null,
-        reviewed_at: null
-      }, { onConflict: 'user_id' });
-    if (error) { setStatus('#vip-request-status', 'Không gửi được: ' + error.message, true); return; }
-    await logSiteEvent('vip_request'); setStatus('#vip-request-status', 'Đã gửi. Chờ admin xét duyệt nhé.'); await updateAccount();
+    e.preventDefault();
+    if (!db || !currentUser) { showToast('Hãy đăng nhập trước.'); return; }
+    if (canEditContent || vipActive || vipRequest?.status === 'pending') return;
+
+    const discoverySource = $('#vip-discovery-source').value.trim();
+    const reason = $('#vip-reason').value.trim();
+    const literatureBackground = $('#vip-literature-background').value.trim();
+    if (!discoverySource || !reason || !literatureBackground) {
+      setStatus('#vip-request-status', 'Hãy trả lời đủ cả ba câu hỏi.', true);
+      return;
+    }
+
+    const submitButton = $('#vip-request-form button[type="submit"]');
+    submitButton.disabled = true;
+    setStatus('#vip-request-status', 'Đang gửi đơn xét duyệt VIP miễn phí...');
+    const row = {
+      user_id: currentUser.id,
+      email: currentUser.email || $('#auth-email').value.trim(),
+      // Giữ các cột cũ để tương thích bảng hiện tại, không yêu cầu liên hệ riêng.
+      contact_method: 'email',
+      contact_detail: '',
+      message: '',
+      discovery_source: discoverySource,
+      vip_reason: reason,
+      literature_background: literatureBackground,
+      status: 'pending',
+      reviewed_by: null,
+      reviewed_at: null
+    };
+    const { error } = await db.from('vip_requests').upsert(row, { onConflict: 'user_id' });
+    submitButton.disabled = false;
+    if (error) {
+      setStatus('#vip-request-status', 'Không gửi được: ' + error.message, true);
+      return;
+    }
+    await logSiteEvent('vip_request');
+    setStatus('#vip-request-status', 'Đã gửi đơn. Admin sẽ xét duyệt trong mục “Duyệt VIP”. VIP hoàn toàn miễn phí.');
+    await updateAccount();
   });
   $('#refresh-vip').addEventListener('click', loadVipRequests);
   $('#refresh-access-logs').addEventListener('click', loadAccessLogs);
@@ -469,7 +503,7 @@
     }));
   }
   $('#poem-editor').addEventListener('submit', async e => {
-    e.preventDefault(); if (!db || !isAdmin) return;
+    e.preventDefault(); if (!db || !canEditContent) return;
     const id = $('#edit-id').value;
     const row = { title: $('#edit-title').value.trim(), category: $('#edit-category').value.trim() || 'Thơ tự do', content: $('#edit-content').value, notes: $('#edit-notes').value.trim(), is_published: $('#edit-published').value === 'true', updated_at: new Date().toISOString() };
     if (!row.title || !row.content.trim()) return setStatus('#editor-status', 'Hãy nhập tiêu đề và nội dung.', true);
@@ -509,7 +543,7 @@
   }
 
   $('#story-editor').addEventListener('submit', async e => {
-    e.preventDefault(); if (!db || !isAdmin) return;
+    e.preventDefault(); if (!db || !canEditContent) return;
     const id = $('#story-edit-id').value;
     const row = { title: $('#story-edit-title').value.trim(), category: $('#story-edit-category').value.trim() || 'Truyện', synopsis: $('#story-edit-synopsis').value.trim(), is_published: $('#story-edit-published').value === 'true', updated_at: new Date().toISOString() };
     if (!row.title) return setStatus('#story-editor-status', 'Hãy nhập tên truyện.', true);
@@ -554,7 +588,7 @@
   }
 
   $('#chapter-editor').addEventListener('submit', async e => {
-    e.preventDefault(); if (!db || !isAdmin || !selectedStoryId) return;
+    e.preventDefault(); if (!db || !canEditContent || !selectedStoryId) return;
     const id = $('#chapter-edit-id').value;
     const row = { story_id: selectedStoryId, chapter_number: Number($('#chapter-edit-number').value), title: $('#chapter-edit-title').value.trim(), content: $('#chapter-edit-content').value, is_published: $('#chapter-edit-published').value === 'true', updated_at: new Date().toISOString() };
     if (!Number.isInteger(row.chapter_number) || row.chapter_number < 1 || row.chapter_number > 9999) return setStatus('#chapter-editor-status', 'Số chương phải từ 1 đến 9999.', true);
@@ -571,7 +605,7 @@
     $$('[data-k-delete]').forEach(b => b.addEventListener('click', async () => { const k = knowledge.find(x => x.id === b.dataset.kDelete); if (!k || !confirm(`Xóa ghi chú “${k.title}”?`)) return; const { error } = await db.from('knowledge_notes').delete().eq('id', k.id); if (error) showToast(error.message); else { showToast('Đã xóa ghi chú.'); await loadKnowledge(); } }));
   }
   $('#knowledge-form').addEventListener('submit', async e => {
-    e.preventDefault(); if (!db || !isAdmin) return;
+    e.preventDefault(); if (!db || !canEditContent) return;
     const row = { title: $('#knowledge-title').value.trim(), content: $('#knowledge-content').value.trim(), is_published: $('#knowledge-published').checked };
     const { error } = await db.from('knowledge_notes').insert(row);
     if (error) setStatus('#knowledge-status', error.message, true); else { e.target.reset(); $('#knowledge-published').checked = true; setStatus('#knowledge-status', 'Đã thêm ghi chú.'); await loadKnowledge(); }
@@ -580,7 +614,7 @@
   function addChatMessage(text, who = 'bot') {
     const el = document.createElement('div'); el.className = `chat-message ${who === 'user' ? 'user-message' : 'bot-message'}`;
     const content = document.createElement('div'); content.textContent = text; el.appendChild(content);
-    const meta = document.createElement('div'); meta.className = 'message-meta'; meta.textContent = who === 'user' ? 'BẠN' : 'NGƯỜI GIỮ TRANG CHỮ'; el.appendChild(meta);
+    const meta = document.createElement('div'); meta.className = 'message-meta'; meta.textContent = who === 'user' ? 'BẠN' : 'NGƯỜI GIỮ TRANG GIÓ'; el.appendChild(meta);
     $('#chat-messages').appendChild(el); $('#chat-messages').scrollTop = $('#chat-messages').scrollHeight;
   }
 
@@ -588,12 +622,12 @@ function answerFromKnowledge(question) {
   const q = normalize(question);
   const meaningIntent = /\b(noi ve|y nghia|phan tich|noi dung|thong diep|cam xuc|bai hoc|noi gi|muon noi gi|the hien gi|muon truyen tai gi|tom tat|ke ve|nhan vat)\b/.test(q);
   const storyIntent = /\b(truyen|chuong|tieu thuyet|nhan vat)\b/.test(q);
-  const visiblePoems = poems.filter(p => p.is_published || isAdmin);
-  const visibleKnowledge = knowledge.filter(k => k.is_published || isAdmin);
-  const visibleStories = stories.filter(s => s.is_published || isAdmin);
+  const visiblePoems = poems.filter(p => p.is_published || canEditContent);
+  const visibleKnowledge = knowledge.filter(k => k.is_published || canEditContent);
+  const visibleStories = stories.filter(s => s.is_published || canEditContent);
   const visibleChapters = storyChapters.filter(ch => {
     const parent = visibleStories.find(s => s.id === ch.story_id);
-    return !!parent && (isAdmin || (parent.is_published && ch.is_published));
+    return !!parent && (canEditContent || (parent.is_published && ch.is_published));
   });
 
   // Ưu tiên tìm truyện bằng tên đầy đủ, không trả nhầm bài thơ cùng từ khóa.
@@ -697,7 +731,7 @@ function answerFromKnowledge(question) {
     window.setTimeout(() => addChatMessage(answerFromKnowledge(question)), 180);
   });
   $$('.suggestion').forEach(b => b.addEventListener('click', () => { $('#chat-input').value = b.textContent; $('#chat-form').requestSubmit(); }));
-  $('#clear-chat').addEventListener('click', () => { $('#chat-messages').innerHTML = ''; addChatMessage('Cuộc trò chuyện đã được làm mới. Bạn muốn tìm điều gì trong kho chữ hôm nay?'); });
+  $('#clear-chat').addEventListener('click', () => { $('#chat-messages').innerHTML = ''; addChatMessage('Cuộc trò chuyện đã được làm mới. Bạn muốn tìm điều gì trong kho chữ của Gió hôm nay?'); });
   $('#menu-toggle').addEventListener('click', () => $('.main-nav').classList.toggle('open'));
   $$('.main-nav a').forEach(a => a.addEventListener('click', () => $('.main-nav').classList.remove('open')));
 
@@ -718,6 +752,27 @@ function answerFromKnowledge(question) {
   function applyReaderTheme(theme) { const allowed = ['paper','night','warm']; const selected = allowed.includes(theme) ? theme : 'paper'; document.documentElement.dataset.readerTheme = selected; localStorage.setItem('giay-muc-tho-reader-theme', selected); const button = $('#reader-theme'); if (button) button.textContent = selected === 'night' ? 'Giao diện: Tối' : selected === 'warm' ? 'Giao diện: Ấm' : 'Giao diện: Giấy'; }
   $('#reader-theme')?.addEventListener('click', () => { const current = document.documentElement.dataset.readerTheme || 'paper'; applyReaderTheme(current === 'paper' ? 'night' : current === 'night' ? 'warm' : 'paper'); });
   applyReaderTheme(localStorage.getItem('giay-muc-tho-reader-theme') || 'paper'); renderReadingShelf();
+
+  function syncRoleUI() {
+    const editorHeading = $('#admin-panel .admin-heading .eyebrow');
+    if (editorHeading) editorHeading.textContent = isAdmin ? 'CHỈ DÀNH CHO QUẢN TRỊ VIÊN' : 'KHU VỰC CỘNG TÁC VIÊN';
+    $$('#admin-tabs [data-admin-tab]').forEach(btn => {
+      const key = btn.dataset.adminTab;
+      btn.hidden = !isAdmin && !(isCollaborator && ['library', 'notes'].includes(key));
+    });
+    if (!canEditContent) {
+      $$('.admin-tab-panel').forEach(panel => { panel.hidden = true; });
+      return;
+    }
+    const active = $('#admin-tabs [data-admin-tab].active');
+    if (!active || active.hidden) {
+      $('#admin-tabs [data-admin-tab="library"]')?.click();
+    } else {
+      // Re-activate the selected tab so a previous collaborator session cannot
+      // leave an admin panel accidentally hidden after switching accounts.
+      active.click();
+    }
+  }
 
   function setupAdminTabs() {
     const nav = $('#admin-tabs'), host = $('#admin-tab-content');
